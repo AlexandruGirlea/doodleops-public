@@ -1,0 +1,211 @@
+{% extends "base_api_apps_view.html" %}
+{% load static %}
+
+{% block html_form_logic %}
+  <p class="text-center text-muted">
+    📌 This section is not open-source — it's based on a purchased theme whose HTML markup remains proprietary and cannot be shared under open-source terms.
+  </p>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const divResponse = document.getElementById('div-response');
+    const spinner = document.getElementById('spinner');
+    const divError = document.getElementById('div-error');
+    const errorMessage = document.getElementById('error-message');
+
+    // Value display elements
+    const gridRowsValue = document.getElementById('grid_rows-value');
+    const gridColumnsValue = document.getElementById('grid_columns-value');
+    const fontScaleValue = document.getElementById('font_scale-value');
+    const transparencyValue = document.getElementById('transparency-value');
+    const rotationAngleValue = document.getElementById('rotation_angle-value');
+
+    // Input elements
+    const gridRowsElement = document.getElementById('grid_rows');
+    const gridColumnsElement = document.getElementById('grid_columns');
+    const fontScaleElement = document.getElementById('font_scale');
+    const transparencyElement = document.getElementById('transparency');
+    const rotationAngleElement = document.getElementById('rotation_angle');
+    const rgbTextColorElement = document.getElementById('rgb_text_color');
+
+    // Initialize displayed values
+    gridRowsValue.textContent = gridRowsElement.value;
+    gridColumnsValue.textContent = gridColumnsElement.value;
+    fontScaleValue.textContent = fontScaleElement.value;
+    transparencyValue.textContent = transparencyElement.value;
+    rotationAngleValue.textContent = rotationAngleElement.value;
+
+    // Update displayed values on input
+    gridRowsElement.addEventListener('input', () => {
+        gridRowsValue.textContent = gridRowsElement.value;
+    });
+
+    gridColumnsElement.addEventListener('input', () => {
+        gridColumnsValue.textContent = gridColumnsElement.value;
+    });
+
+    fontScaleElement.addEventListener('input', () => {
+        fontScaleValue.textContent = fontScaleElement.value;
+    });
+
+    transparencyElement.addEventListener('input', () => {
+        transparencyValue.textContent = transparencyElement.value;
+    });
+
+    rotationAngleElement.addEventListener('input', () => {
+        rotationAngleValue.textContent = rotationAngleElement.value;
+    });
+
+    // Function to convert hex color to RGB string
+    function hexToRgb(hex) {
+        // Remove '#' if present
+        hex = hex.replace('#', '');
+        // Ensure we have a 6-digit hex code
+        if (hex.length !== 6) {
+            throw new Error('Invalid hex color code.');
+        }
+        // Parse r, g, b values
+        let bigint = parseInt(hex, 16);
+        let r = (bigint >> 16) & 255;
+        let g = (bigint >> 8) & 255;
+        let b = bigint & 255;
+        return r + "," + g + "," + b;
+    }
+
+    document.getElementById('image-form').addEventListener('submit', function (e) {
+        e.preventDefault();
+        divError.style.display = 'none'; // Hide error message for new requests
+        divResponse.style.display = 'none'; // Hide previous responses
+
+        // Get form inputs
+        const text = document.getElementById('text').value.trim();
+        const outputFormatType = document.getElementById('output_format_type').value;
+        const gridRows = gridRowsElement.value;
+        const gridColumns = gridColumnsElement.value;
+        const fontScale = fontScaleElement.value;
+        const transparency = transparencyElement.value;
+        const rotationAngle = rotationAngleElement.value;
+
+        const backgroundImageInput = document.getElementById('background_image');
+        const fontFileInput = document.getElementById('font_file');
+
+        // Get RGB text color
+        let rgbTextColor;
+        try {
+            const hexColor = rgbTextColorElement.value.trim();
+            rgbTextColor = hexToRgb(hexColor);
+        } catch (error) {
+            alert('Invalid color selected.');
+            return;
+        }
+
+        // Validate text length
+        if (text.length === 0 || text.length > {{ api.other_info.text_max_length }}) {
+            alert('Please enter watermark text with a maximum length of {{ api.other_info.text_max_length }} characters.');
+            return;
+        }
+
+        // Validate background image
+        if (backgroundImageInput.files.length === 0) {
+            alert('Please select a background image file.');
+            return;
+        }
+
+        const allowedImageTypes = ['image/png', 'image/jpeg'];
+        const allowedFontTypes = ['font/ttf', 'font/otf', 'application/octet-stream']; // Some browsers may use 'application/octet-stream' for font files
+        const backgroundImageMaxFileSizeMb = {{ api.other_info.background_file_size_mb }};
+        const fontFileMaxFileSizeMb = {{ api.other_info.font_file_size_mb }};
+
+        const backgroundFile = backgroundImageInput.files[0];
+        const fontFile = fontFileInput.files[0];
+
+        // Check background image
+        if (backgroundFile.size > backgroundImageMaxFileSizeMb * 1024 * 1024) {
+            alert('The background image file must not exceed ' + backgroundImageMaxFileSizeMb + ' MB.');
+            return;
+        }
+        if (!allowedImageTypes.includes(backgroundFile.type)) {
+            alert('Only JPEG and PNG files are allowed for the background image.');
+            return;
+        }
+
+        // Check font file if provided
+        if (fontFileInput.files.length > 0) {
+            if (fontFile.size > fontFileMaxFileSizeMb * 1024 * 1024) {
+                alert('The font file must not exceed ' + fontFileMaxFileSizeMb + ' MB.');
+                return;
+            }
+            if (!allowedFontTypes.includes(fontFile.type)) {
+                alert('Only TTF and OTF font files are allowed.');
+                return;
+            }
+        }
+
+        spinner.style.display = 'block';
+
+        const formData = new FormData();
+        formData.append('background_image', backgroundFile);
+        if (fontFileInput.files.length > 0) {
+            formData.append('font_file', fontFile);
+        }
+
+        // Build the query parameters
+        const params = new URLSearchParams();
+        params.append('text', text);
+        params.append('output_format_type', outputFormatType);
+        params.append('grid_rows', gridRows);
+        params.append('grid_columns', gridColumns);
+        params.append('font_scale', fontScale);
+        params.append('transparency', transparency);
+        params.append('rotation_angle', rotationAngle);
+        params.append('rgb_text_color', rgbTextColor);
+
+        // Construct URL with query parameters
+        let url = new URL('{{ fast_api_path_full_path }}');
+        url.search = params.toString();
+
+        fetch(url.toString(), {
+            method: 'POST',
+            headers: {
+                "Authorization": "Bearer {{ token }}"
+            },
+            body: formData
+        })
+        .then(response => {
+            if (response.status === 200) {
+                return response.blob().then(blob => {
+                    const url = URL.createObjectURL(blob);
+
+                    divResponse.innerHTML = `
+                        <div class="mb-3">
+                            <label for="processed-image" class="form-label">Processed Image:</label>
+                            <img id="processed-image" src="${url}" class="img-fluid" alt="Processed Image">
+                        </div>
+                        <a href="${url}" download="processed_image.${outputFormatType}" class="btn btn-primary">
+                            <i class="bi bi-download"></i> Download Image
+                        </a>
+                    `;
+
+                    spinner.style.display = 'none';
+                    divResponse.style.display = 'block';
+                });
+            } else {
+                return response.json().then(data => {
+                    errorMessage.textContent = data.detail || "An unknown error occurred.";
+                    spinner.style.display = 'none';
+                    divError.style.display = 'block';
+                });
+            }
+        })
+        .catch(error => {
+            errorMessage.textContent = "Please try again later.";
+            spinner.style.display = 'none';
+            divError.style.display = 'block';
+            console.error('Fetch error:', error);
+        });
+    });
+});
+</script>
+{% endblock %}

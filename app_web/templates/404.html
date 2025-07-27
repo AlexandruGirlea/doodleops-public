@@ -1,0 +1,15 @@
+{% load static %}
+
+<html lang="en">
+<head>
+    <title>Error 404 | DoodleOps</title>
+</head>
+
+<main>
+    <div>
+          <p>Error 404: Page Not Found!</p>
+          <p>We couldn’t find the page you’re looking for. If this seems like an error, please <a class="link" href="{% url 'contact' %}">let us know</a>.</p>
+        <a href="{% url 'index' %}">Go back to Home</a>
+    </div>
+</main>
+</html>

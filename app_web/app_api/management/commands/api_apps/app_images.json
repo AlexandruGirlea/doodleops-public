@@ -1,0 +1,224 @@
+{
+  "Process images": {
+        "display_order": 4,
+        "description": "Process images",
+        "url_path": "images",
+        "apis": [
+          {
+                "html_template_path": "app_images/v1/view_image_compare_images.html",
+                "display_name": "Find differences between two similar images",
+                "display_order": 0,
+                "description": "Insert two images (jpg or png) and get the differences between them highlighted. This function is still in beta, might not work for all images. Limits: 10MB for each image.",
+                "url_path": "images/v1/compare-images",
+                "method": "POST",
+                "cost": 5,
+                "svg_icon_name": "app_images.svg"
+            },
+          {
+                "html_template_path": "app_images/v1/view_image_convert_dicom_to_jpg.html",
+                "display_name": "Convert DICOM to JPG",
+                "display_order": 1,
+                "description": "Insert a DICOM image and get the JPG image. Limits: 30MB.",
+                "url_path": "images/v1/convert-dicom-to-jpg",
+                "method": "POST",
+                "cost": 2,
+                "svg_icon_name": "app_images.svg"
+            },
+          {
+                "html_template_path": "app_images/v1/view_image_convert_format.html",
+                "display_name": "Convert image format",
+                "display_order": 2,
+                "description": "Insert an image and get the image in the desired format. Limits: 30MB.",
+                "url_path": "images/v1/convert-format",
+                "method": "POST",
+                "cost": 5,
+                "svg_icon_name": "app_images.svg"
+            },
+            {
+                "html_template_path": "app_images/v1/view_image_convert_to_b_w.html",
+                "display_name": "Convert image to black and white",
+                "display_order": 3,
+                "description": "Insert an image and get the black and white image. Limits: 30MB.",
+                "url_path": "images/v1/convert-to-b-w",
+                "method": "POST",
+                "cost": 2,
+                "svg_icon_name": "app_images.svg"
+            },
+          {
+                "html_template_path": "app_images/v1/view_image_convert_to_gray.html",
+                "display_name": "Convert image to gray",
+                "display_order": 4,
+                "description": "Insert an image and get the gray image. Limits: 30MB.",
+                "url_path": "images/v1/convert-to-gray",
+                "method": "POST",
+                "cost": 2,
+                "svg_icon_name": "app_images.svg"
+            },
+              {
+                "html_template_path": "app_images/v1/view_image_create_barcode.html",
+                "display_name": "Generate barcode image",
+                "display_order": 5,
+                "description": "Insert a text choose the barcode type and get the barcode image.",
+                "url_path": "images/v1/create-barcode",
+                "method": "POST",
+                "cost": 1,
+                "svg_icon_name": "app_images.svg"
+            },
+          {
+                "html_template_path": "app_images/v1/view_image_gif_extract_frames.html",
+                "display_name": "Extract frames from GIF",
+                "display_order": 6,
+                "description": "Insert a GIF file and get the frames as an archive. Limits: 10MB.",
+                "url_path": "images/v1/gif-extract-frames",
+                "method": "POST",
+                "cost": 6,
+                "svg_icon_name": "app_images.svg"
+            },
+          {
+                "html_template_path": "app_images/v1/view_image_create_gif.html",
+                "display_name": "Create GIF",
+                "display_order": 7,
+                "description": "Insert images or a video and get the GIF image. Limits: up to 40 images, 10MB total size(images or video).",
+                "url_path": "images/v1/create-gif",
+                "method": "POST",
+                "cost": 20,
+                "svg_icon_name": "app_images.svg",
+                "other_info": {
+                    "file_size_mb": 10
+                }
+            },
+          {
+                "html_template_path": "app_images/v1/view_image_create_ico.html",
+                "display_name": "Create ICO file from image",
+                "display_order": 8,
+                "description": "Insert an image and get the ICO image. Limits: 10MB.",
+                "url_path": "images/v1/create-ico",
+                "method": "POST",
+                "cost": 4,
+                "svg_icon_name": "app_images.svg",
+                "other_info": {
+                    "file_size_mb": 10
+                }
+            },
+          {
+                "html_template_path": "app_images/v1/view_image_create_qr_code.html",
+                "display_name": "Create QR code",
+                "display_order": 9,
+                "description": "Insert a text and get the QR code image. Optionally, you can also insert an PNG image to be displayed in the center of the QR code. Limits: 2MB for the PNG image.",
+                "url_path": "images/v1/create-qr-code",
+                "method": "POST",
+                "cost": 1,
+                "svg_icon_name": "app_images.svg",
+                "other_info": {
+                    "file_size_mb": 2
+                }
+            },
+          {
+                "html_template_path": "app_images/v1/view_image_create_thumbnail.html",
+                "display_name": "Create thumbnail from image",
+                "display_order": 10,
+                "description": "Insert an image and get the thumbnail image. Limits: 10MB.",
+                "url_path": "images/v1/create-thumbnail",
+                "method": "POST",
+                "cost": 4,
+                "svg_icon_name": "app_images.svg",
+                "other_info": {
+                    "file_size_mb": 10
+                }
+            },
+          {
+                "html_template_path": "app_images/v1/view_image_crop.html",
+                "display_name": "Crop image and gif",
+                "display_order": 11,
+                "description": "Insert an image (jpg, png or gif) and get the cropped image. Limits: 10MB.",
+                "url_path": "images/v1/crop",
+                "method": "POST",
+                "cost": 3,
+                "svg_icon_name": "app_images.svg",
+                "other_info": {
+                    "file_size_mb": 10
+                }
+            },
+          {
+                "html_template_path": "app_images/v1/view_image_decode_qr_and_barcodes.html",
+                "display_name": "Decode QR and barcodes",
+                "display_order": 12,
+                "description": "Insert an image and get the decoded QR or barcode. Limits: 10MB.",
+                "url_path": "images/v1/decode-qr-and-barcodes",
+                "method": "POST",
+                "cost": 2,
+                "svg_icon_name": "app_images.svg",
+                "other_info": {
+                    "file_size_mb": 10
+                }
+            },
+          {
+                "html_template_path": "app_images/v1/view_image_downsize.html",
+                "display_name": "Downsize image",
+                "display_order": 13,
+                "description": "Insert an image and get a reduced size image. Limits: 30MB.",
+                "url_path": "images/v1/downsize",
+                "method": "POST",
+                "cost": 2,
+                "svg_icon_name": "app_images.svg",
+                "other_info": {
+                    "file_size_mb": 30
+                }
+            },
+          {
+                "html_template_path": "app_images/v1/view_image_ocr.html",
+                "display_name": "Read text from image (OCR)",
+                "display_order": 14,
+                "description": "OCR(Optical character recognition), insert an image and get the text. Limits: 10MB.",
+                "url_path": "images/v1/ocr",
+                "method": "POST",
+                "cost": 20,
+                "svg_icon_name": "app_images.svg",
+                "other_info": {
+                    "file_size_mb": 10
+                }
+            },
+          {
+                "html_template_path": "app_images/v1/view_image_remove_background.html",
+                "display_name": "Remove background from image",
+                "display_order": 15,
+                "description": "Insert an image and get the image with the background removed. Limits: 10MB.",
+                "url_path": "images/v1/remove-background",
+                "method": "POST",
+                "cost": 10,
+                "svg_icon_name": "app_images.svg",
+                "other_info": {
+                    "file_size_mb": 10
+                }
+            },
+          {
+                "html_template_path": "app_images/v1/view_image_watermark_image.html",
+                "display_name": "Add Image watermark",
+                "display_order": 17,
+                "description": "Insert a base image and a watermark image and get the image with the watermark. Limits: 10MB for each image.",
+                "url_path": "images/v1/watermark-add-image",
+                "method": "POST",
+                "cost": 2,
+                "svg_icon_name": "app_images.svg",
+                "other_info": {
+                    "file_size_mb": 10
+                }
+            },
+          {
+                "html_template_path": "app_images/v1/view_image_watermark_text.html",
+                "display_name": "Add Text watermark",
+                "display_order": 18,
+                "description": "Insert an image and a text and get the image with the text watermark. Limits: 10MB for the image.",
+                "url_path": "images/v1/watermark-add-text",
+                "method": "POST",
+                "cost": 2,
+                "svg_icon_name": "app_images.svg",
+                "other_info": {
+                    "background_file_size_mb": 10,
+                    "font_file_size_mb": 2,
+                    "text_max_length": 25
+                }
+            }
+        ]
+    }
+}

@@ -1,0 +1,20 @@
+{% extends "base_profile.html" %}
+{% load static %}
+
+{% block profile_content %}
+
+{% if not_metered %}
+
+  <p class="text-center text-muted">
+    📌 This section is not open-source — it's based on a purchased theme whose HTML markup remains proprietary and cannot be shared under open-source terms.
+  </p>
+
+{% else %}
+
+  <p class="text-center text-muted">
+    📌 This section is not open-source — it's based on a purchased theme whose HTML markup remains proprietary and cannot be shared under open-source terms.
+  </p>
+
+{% endif %}
+
+{% endblock %}

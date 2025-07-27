@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block main %}
+  <p class="text-center text-muted">
+    📌 This section is not open-source — it's based on a purchased theme whose HTML markup remains proprietary and cannot be shared under open-source terms.
+  </p>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Alert Close Button
+        var alertCloseBtn = document.getElementById('alert-close');
+        if (alertCloseBtn) {
+            alertCloseBtn.addEventListener('click', function () {
+                var successAlert = document.getElementById('message-alert');
+                if (successAlert) {
+                    successAlert.style.display = 'none';
+                }
+            });
+        }
+        // Contact Form Validation
+        var contactForm = document.getElementById('GeneralContactForm');
+        if (contactForm) {
+            contactForm.addEventListener('submit', function (event) {
+                event.preventDefault();
+                console.log('Form submit event triggered');
+                var formValid = true;
+
+                // Get form fields
+                var nameField = this.elements['name'];
+                var emailField = this.elements['email'];
+                var messageField = this.elements['message'];
+
+                // Clear previous error messages
+                var errorMessages = document.querySelectorAll('.error-message');
+                errorMessages.forEach(function (msg) {
+                    msg.style.display = 'none';
+                });
+
+                // Validate Name
+                if (nameField.value.trim() === '') {
+                    formValid = false;
+                    nameField.parentElement.nextElementSibling.style.display = 'block';
+                }
+
+                // Validate Email
+                var emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (emailField.value.trim() === '' || !emailPattern.test(emailField.value)) {
+                    formValid = false;
+                    emailField.parentElement.nextElementSibling.style.display = 'block';
+                }
+
+                // Validate Message
+                if (messageField.value.trim() === '') {
+                    formValid = false;
+                    messageField.parentElement.nextElementSibling.style.display = 'block';
+                }
+
+                if (formValid) {
+                    grecaptcha.enterprise.ready(function() {
+                        console.log('grecaptcha ready');
+                        grecaptcha.enterprise.execute('{{ recaptcha_public_key }}', {action: 'submit'}).then(function(token) {
+                          var recaptchaTokenInput = document.createElement('input');
+                          recaptchaTokenInput.setAttribute('type', 'hidden');
+                          recaptchaTokenInput.setAttribute('name', 'g-recaptcha-response');
+                          recaptchaTokenInput.setAttribute('value', token);
+                          contactForm.appendChild(recaptchaTokenInput);
+                          contactForm.submit();
+                        }).catch(function(error) {
+                          console.error('Error executing grecaptcha:');
+                        });
+                      });
+            }
+
+                // Prevent form submission if validation fails
+                if (!formValid) {
+                    event.preventDefault();
+                }
+        });
+        }
+    });
+</script>
+
+{% endblock %}

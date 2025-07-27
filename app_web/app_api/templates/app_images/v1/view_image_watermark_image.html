@@ -1,0 +1,159 @@
+{% extends "base_api_apps_view.html" %}
+{% load static %}
+
+{% block html_form_logic %}
+  <p class="text-center text-muted">
+    📌 This section is not open-source — it's based on a purchased theme whose HTML markup remains proprietary and cannot be shared under open-source terms.
+  </p>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    let divResponse = document.getElementById('div-response');
+    let spinner = document.getElementById('spinner');
+    let divError = document.getElementById('div-error');
+    let errorMessage = document.getElementById('error-message');
+
+    let gridRowsValue = document.getElementById('grid_rows-value');
+    let gridColumnsValue = document.getElementById('grid_columns-value');
+    let watermarkImageScaleValue = document.getElementById('watermark_image_scale-value');
+    let watermarkTransparencyValue = document.getElementById('watermark_transparency-value');
+
+    const gridRowsElement = document.getElementById('grid_rows');
+    const gridColumnsElement = document.getElementById('grid_columns');
+    const watermarkImageScaleElement = document.getElementById('watermark_image_scale');
+    const watermarkTransparencyElement = document.getElementById('watermark_transparency');
+
+    // Initialize displayed values
+    gridRowsValue.textContent = gridRowsElement.value;
+    gridColumnsValue.textContent = gridColumnsElement.value;
+    watermarkImageScaleValue.textContent = watermarkImageScaleElement.value;
+    watermarkTransparencyValue.textContent = watermarkTransparencyElement.value;
+
+    // Add event listeners to update displayed values
+    gridRowsElement.addEventListener('input', function() {
+        gridRowsValue.textContent = gridRowsElement.value;
+    });
+
+    gridColumnsElement.addEventListener('input', function() {
+        gridColumnsValue.textContent = gridColumnsElement.value;
+    });
+
+    watermarkImageScaleElement.addEventListener('input', function() {
+        watermarkImageScaleValue.textContent = watermarkImageScaleElement.value;
+    });
+
+    watermarkTransparencyElement.addEventListener('input', function() {
+        watermarkTransparencyValue.textContent = watermarkTransparencyElement.value;
+    });
+
+    document.getElementById('image-form').addEventListener('submit', function (e) {
+        e.preventDefault();
+        divError.style.display = 'none'; // Hide error message for new requests
+        divResponse.style.display = 'none'; // Hide previous responses
+
+        // Get form inputs
+        const outputFormatType = document.getElementById('output_format_type').value;
+        const gridRows = gridRowsElement.value;
+        const gridColumns = gridColumnsElement.value;
+        const watermarkImageScale = watermarkImageScaleElement.value;
+        const watermarkTransparency = watermarkTransparencyElement.value;
+
+        const backgroundImageInput = document.getElementById('background_image');
+        const watermarkImageInput = document.getElementById('watermark_image');
+
+        // Validate files
+        if (backgroundImageInput.files.length === 0 || watermarkImageInput.files.length === 0) {
+            alert('Please select both background image and watermark image files.');
+            return;
+        }
+
+        // Client-side file size and type validation
+        const allowedFileTypes = ['image/png', 'image/jpeg'];
+        const maxFileSizeMb = 10; // Or set the appropriate value
+
+        const backgroundFile = backgroundImageInput.files[0];
+        const watermarkFile = watermarkImageInput.files[0];
+
+        // Check background image
+        if (backgroundFile.size > maxFileSizeMb * 1024 * 1024) {
+            alert('The background image file must not exceed ' + maxFileSizeMb + ' MB.');
+            return;
+        }
+        if (!allowedFileTypes.includes(backgroundFile.type)) {
+            alert('Only JPEG and PNG files are allowed for the background image.');
+            return;
+        }
+
+        // Check watermark image
+        if (watermarkFile.size > maxFileSizeMb * 1024 * 1024) {
+            alert('The watermark image file must not exceed ' + maxFileSizeMb + ' MB.');
+            return;
+        }
+        if (!allowedFileTypes.includes(watermarkFile.type)) {
+            alert('Only JPEG and PNG files are allowed for the watermark image.');
+            return;
+        }
+
+        spinner.style.display = 'block';
+
+        const formData = new FormData();
+        formData.append('background_image', backgroundFile);
+        formData.append('watermark_image', watermarkFile);
+
+        // Build the query parameters
+        const params = new URLSearchParams();
+        params.append('output_format_type', outputFormatType);
+        params.append('grid_rows', gridRows);
+        params.append('grid_columns', gridColumns);
+        params.append('watermark_image_scale', watermarkImageScale);
+        params.append('watermark_transparency', watermarkTransparency);
+
+        // Construct URL with query parameters
+        let url = new URL('{{ fast_api_path_full_path }}');
+        url.search = params.toString();
+
+        fetch(url.toString(), {
+            method: 'POST',
+            headers: {
+                "Authorization": "Bearer {{ token }}"
+            },
+            body: formData
+        })
+        .then(response => {
+            if (response.status === 200) {
+                return response.blob().then(blob => {
+                    const url = URL.createObjectURL(blob);
+
+                    divResponse.innerHTML = `
+                        <div class="mb-3">
+                            <label for="processed-image" class="form-label">Processed Image:</label>
+                            <img id="processed-image" src="${url}" class="img-fluid" alt="Processed Image">
+                        </div>
+                        <a href="${url}" download="processed_image.${outputFormatType}" class="btn btn-primary">
+                            <i class="bi bi-download"></i> Download Image
+                        </a>
+                    `;
+
+                    spinner.style.display = 'none';
+                    divResponse.style.display = 'block';
+                });
+            } else {
+                return response.json().then(data => {
+                    errorMessage.textContent = data.detail || "An unknown error occurred.";
+                    spinner.style.display = 'none';
+                    divError.style.display = 'block';
+                });
+            }
+        })
+        .catch(error => {
+            errorMessage.textContent = "Please try again later.";
+            spinner.style.display = 'none';
+            divError.style.display = 'block';
+            console.error('Fetch error:', error);
+        });
+    });
+});
+</script>
+{% endblock %}

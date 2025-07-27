@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# Paths to VERSION files
+API_VERSION_FILE="./app_api/VERSION"
+WEB_VERSION_FILE="./app_web/VERSION"
+
+# Read versions
+API_VERSION=$(cat $API_VERSION_FILE)
+WEB_VERSION=$(cat $WEB_VERSION_FILE)
+
+# Check API Version Sync
+if ! grep -q "default = \"$API_VERSION\"" deploy/cloud/terraform/dev/variables.tf; then
+  echo "API version in Terraform variable does not match $API_VERSION_FILE"
+  exit 1
+fi
+
+# Check Web Version Sync
+if ! grep -q "default = \"$WEB_VERSION\"" deploy/cloud/terraform/dev/variables.tf; then
+  echo "Web version in Terraform variable does not match $WEB_VERSION_FILE"
+  exit 1
+fi

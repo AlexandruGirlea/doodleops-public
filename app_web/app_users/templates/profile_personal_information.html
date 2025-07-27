@@ -1,0 +1,30 @@
+{% extends "base_profile.html" %}
+{% load static %}
+
+{% block profile_content %}
+  <p class="text-center text-muted">
+    📌 This section is not open-source — it's based on a purchased theme whose HTML markup remains proprietary and cannot be shared under open-source terms.
+  </p>
+
+  <script>
+  const phoneInputField = document.querySelector("#phone");
+  const phoneInput = window.intlTelInput(phoneInputField, {
+    onlyCountries: {{ allowed_countries | safe }},
+    initialCountry: "us",
+    nationalMode: false,
+    utilsScript:
+      "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js",
+  });
+  const info = document.querySelector(".alert-info");
+
+  document.getElementById("check-phone").addEventListener("click", function(event) {
+      if (!phoneInput.isValidNumber()) {
+        event.preventDefault()
+        alert("Please enter a valid phone number.");
+      } else {
+        phoneInputField.value = phoneInput.getNumber();
+      }
+    });
+</script>
+
+{% endblock %}

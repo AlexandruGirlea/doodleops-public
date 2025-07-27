@@ -1,0 +1,29 @@
+{% extends "admin/change_list.html" %}
+
+{% block content %}
+    <div style="margin-bottom: 20px;">
+        <form id="terms-form" action="{% url 'admin:send_update_to_all_users' %}?type=legal" method="post" style="display: inline;">
+            {% csrf_token %}
+            <button type="submit" class="default">Send Legal Update Emails</button>
+        </form>
+        <form id="maintenance-form" action="{% url 'admin:send_update_to_all_users' %}?type=maintenance" method="post" style="display: inline; margin-left: 10px;">
+            {% csrf_token %}
+            <button type="submit" class="default">Send Maintenance Notifications</button>
+        </form>
+    </div>
+    {{ block.super }}
+
+    <script>
+        document.getElementById('terms-form').addEventListener('submit', function(event) {
+            if (!confirm('Are you sure you want to send Legal Update Emails?')) {
+                event.preventDefault();
+            }
+        });
+
+        document.getElementById('maintenance-form').addEventListener('submit', function(event) {
+            if (!confirm('Are you sure you want to send Maintenance Notifications?')) {
+                event.preventDefault();
+            }
+        });
+    </script>
+{% endblock %}

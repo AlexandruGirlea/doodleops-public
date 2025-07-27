@@ -1,0 +1,182 @@
+{% extends "base_api_apps_view.html" %}
+{% load static %}
+
+{% block html_form_logic %}
+  <p class="text-center text-muted">
+    📌 This section is not open-source — it's based on a purchased theme whose HTML markup remains proprietary and cannot be shared under open-source terms.
+  </p>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  let divResponse;
+  let spinner;
+  let divError;
+  let errorMessage;
+  let fileUrl;
+  let fileInputCount = 2;
+
+  document.addEventListener('DOMContentLoaded', () => {
+    // Initialize elements
+    divResponse = document.getElementById('div-response');
+    spinner = document.getElementById('spinner');
+    divError = document.getElementById('div-error');
+
+    // Hide response and error containers initially
+    divResponse.style.display = 'none';
+    spinner.style.display = 'none';
+    divError.style.display = 'none';
+
+    const addFileButton = document.getElementById('add-file-button');
+    const fileInputsDiv = document.getElementById('file-inputs');
+
+    // Event Listener to Add New File Input
+    addFileButton.addEventListener('click', () => {
+      if (fileInputCount >= 10) {
+        alert('You can only upload up to 10 files.');
+        return;
+      }
+
+      // Create a new div for the file input group
+      const newFileInputDiv = document.createElement('div');
+      newFileInputDiv.className = 'file-input-group';
+      newFileInputDiv.id = `file-input-${fileInputCount}`;
+
+      // Create label for the new file input
+      const newLabel = document.createElement('label');
+      newLabel.setAttribute('for', `file${fileInputCount}`);
+      newLabel.textContent = 'Upload Microsoft Excel File:';
+
+      // Create the new file input
+      const newInput = document.createElement('input');
+      newInput.type = 'file';
+      newInput.id = `file${fileInputCount}`;
+      newInput.name = 'files'; // Same name to create an array in FormData
+      newInput.className = 'form-control';
+      newInput.accept = '.xls,.xlsx';
+      newInput.required = true;
+
+      // Create the Remove button
+      const removeButton = document.createElement('button');
+      removeButton.type = 'button';
+      removeButton.className = 'remove-file-button btn btn-danger btn-sm';
+      removeButton.textContent = 'Remove';
+
+      // Append elements to the new file input div
+      newFileInputDiv.appendChild(newLabel);
+      newFileInputDiv.appendChild(newInput);
+      newFileInputDiv.appendChild(document.createElement('br'));
+      newFileInputDiv.appendChild(removeButton);
+      newFileInputDiv.appendChild(document.createElement('br'));
+      newFileInputDiv.appendChild(document.createElement('br'));
+
+      // Append the new file input div to the container
+      fileInputsDiv.appendChild(newFileInputDiv);
+
+      fileInputCount++;
+    });
+
+    // Event Delegation for Remove Buttons
+    fileInputsDiv.addEventListener('click', (e) => {
+      if (e.target && e.target.classList.contains('remove-file-button')) {
+        if (fileInputCount > 2) {
+          const fileInputDiv = e.target.parentElement;
+          fileInputsDiv.removeChild(fileInputDiv);
+          fileInputCount--;
+        } else {
+          alert('At least two file inputs are required.');
+        }
+      }
+    });
+  });
+
+  // Form Submission Handler
+  document.getElementById('excel-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    divError.style.display = 'none'; // Hide error message for new requests
+
+    const fileInputs = document.querySelectorAll('input[type="file"][name="files"]');
+    let filesSelectedCount = 0;
+
+    // Count how many files are selected
+    fileInputs.forEach((input) => {
+      if (input.files.length > 0) {
+        filesSelectedCount++;
+      }
+    });
+
+    if (filesSelectedCount < 2) {
+      alert('Please select at least two Excel files to proceed.');
+      return;
+    }
+
+    // Show the spinner
+    spinner.style.display = 'block';
+
+    const formData = new FormData();
+
+    // Append all selected files to FormData
+    fileInputs.forEach((input) => {
+      if (input.files.length > 0) {
+        formData.append('files', input.files[0]);
+      }
+    });
+
+    // Get additional parameters
+    const sheetName = document.getElementById('sheet_name').value;
+    let useUploadOrder = document.querySelector('input[name="useUploadOrder"]:checked').value === 'true';
+
+    // Build query parameters
+    const params = new URLSearchParams();
+    if (sheetName) {
+      params.append('sheet_name', sheetName);
+    }
+    if (useUploadOrder) {
+      params.append('use_upload_order', 'true');
+    }
+
+    // Construct the full URL with query parameters
+    let url = '{{ fast_api_path_full_path }}'; // Replace with your actual API endpoint
+    if (params.toString()) {
+      url += '?' + params.toString();
+    }
+
+    // Make the POST request
+    fetch(url, {
+      method: 'POST',
+      headers: {
+        "Authorization": "Bearer {{ token }}" // Replace with your actual token
+      },
+      body: formData
+    })
+    .then(response => {
+      if (response.status === 200) {
+        return response.blob().then(blob => {
+          if (fileUrl) {
+            URL.revokeObjectURL(fileUrl);
+          }
+          fileUrl = URL.createObjectURL(blob);
+
+          divResponse.innerHTML = `<a id="download-button" href="${fileUrl}" download="merged_file.xlsx" class="btn btn-primary">Download Modified Excel File</a>`;
+          spinner.style.display = 'none';
+          divResponse.style.display = 'block';
+        });
+      } else {
+        return response.json().then(data => {
+          errorMessage = document.getElementById('error-message');
+          errorMessage.textContent = data.detail || "An unknown error occurred.";
+          spinner.style.display = 'none';
+          divError.style.display = 'block';
+        });
+      }
+    })
+    .catch(error => {
+      errorMessage = document.getElementById('error-message');
+      errorMessage.textContent = "Please try again later.";
+      spinner.style.display = 'none';
+      divError.style.display = 'block';
+      console.error('Fetch error:', error);
+    });
+  });
+</script>
+{% endblock %}

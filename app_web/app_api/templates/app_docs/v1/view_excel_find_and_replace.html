@@ -1,0 +1,84 @@
+{% extends "base_api_apps_view.html" %}
+{% load static %}
+
+{% block html_form_logic %}
+  <p class="text-center text-muted">
+    📌 This section is not open-source — it's based on a purchased theme whose HTML markup remains proprietary and cannot be shared under open-source terms.
+  </p>
+{% endblock %}
+
+{% block scripts %}
+
+<script>
+    let divResponse;
+    let spinner;
+    let divError;
+    let errorMessage;
+    let fileUrl;
+
+    document.addEventListener('DOMContentLoaded', () => {
+
+        divResponse = document.getElementById('div-response');
+        divResponse.style.display = 'none';
+
+        spinner = document.getElementById('spinner');
+        spinner.style.display = 'none';
+
+        divError = document.getElementById('div-error');
+        divError.style.display = 'none';
+    });
+
+    document.getElementById('excel-form').addEventListener('submit', function (e) {
+        e.preventDefault();
+        divError.style.display = 'none'; // Hide error message for new requests
+
+        const fileInput = document.getElementById('file');
+        if (fileInput.files.length === 0) {
+            alert('Please select an Excel file to proceed.');
+            return;
+        }
+
+        spinner.style.display = 'block';
+
+        const formData = new FormData(this);
+
+        fetch('{{ fast_api_path_full_path }}', {
+            method: 'POST',
+            headers: {
+                "Authorization": "Bearer {{ token }}"
+            },
+            body: formData
+        })
+        .then(response => {
+            if (response.status === 200) {
+                return response.blob().then(blob => {
+                    if (fileUrl) {
+                        URL.revokeObjectURL(fileUrl);
+                    }
+
+                    fileUrl = URL.createObjectURL(blob);
+
+                    divResponse.innerHTML = '<a id="download-button" href="' + fileUrl + '" download="modified_file.xlsx" class="btn btn-primary">Download Modified Excel File</a>';
+                    spinner.style.display = 'none';
+                    divResponse.style.display = 'block';
+                });
+            } else {
+                return response.json().then(data => {
+                    errorMessage = document.getElementById('error-message');
+                    errorMessage.textContent = data.detail || "An unknown error occurred.";
+                    spinner.style.display = 'none';
+                    divError.style.display = 'block';
+                });
+            }
+        })
+        .catch(error => {
+            errorMessage = document.getElementById('error-message');
+            errorMessage.textContent = "Please try again later.";
+            spinner.style.display = 'none';
+            divError.style.display = 'block';
+            console.error('Fetch error:', error);
+        });
+    });
+</script>
+
+{% endblock %}

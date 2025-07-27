@@ -1,0 +1,163 @@
+{% extends "base_api_apps_view.html" %}
+{% load static %}
+
+{% block html_form_logic %}
+  <p class="text-center text-muted">
+    📌 This section is not open-source — it's based on a purchased theme whose HTML markup remains proprietary and cannot be shared under open-source terms.
+  </p>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let divResponse;
+let spinner;
+let divError;
+let errorMessage;
+let fileUrl;
+let outputFormatSelect;
+
+document.addEventListener('DOMContentLoaded', () => {
+    divResponse = document.getElementById('div-response');
+    spinner = document.getElementById('spinner');
+    divError = document.getElementById('div-error');
+    errorMessage = document.getElementById('error-message');
+    outputFormatSelect = document.getElementById('output-format');
+
+    // Initially hide elements
+    divResponse.style.display = 'none';
+    spinner.style.display = 'none';
+    divError.style.display = 'none';
+    outputFormatSelect.disabled = true;
+
+    const fileInput = document.getElementById('file');
+    fileInput.addEventListener('change', handleFileSelect);
+
+    document.getElementById('dicom-form').addEventListener('submit', function (e) {
+        e.preventDefault();
+        divError.style.display = 'none'; // Hide error message for new requests
+        divResponse.style.display = 'none'; // Hide previous responses
+
+        const fileInput = document.getElementById('file');
+
+        if (fileInput.files.length === 0) {
+            alert('Please select a file to process.');
+            return;
+        }
+
+        if (!outputFormatSelect.value) {
+            alert('Please select a valid output format.');
+            return;
+        }
+
+        spinner.style.display = 'block';
+        outputFormatSelect.disabled = true; // Disable output format selection during processing
+
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+
+        const selectedOutputFormat = outputFormatSelect.value;
+
+        fetch('{{ fast_api_path_full_path }}?output_img_format=' + encodeURIComponent(selectedOutputFormat), {
+            method: 'POST',
+            headers: {
+                "Authorization": "Bearer {{ token }}"
+            },
+            body: formData
+        })
+        .then(response => {
+            spinner.style.display = 'none';
+            outputFormatSelect.disabled = false; // Re-enable output format selection
+
+            if (response.status === 200) {
+                return response.blob().then(blob => {
+                    // Extract the filename from the Content-Disposition header
+                    const contentDisposition = response.headers.get('content-disposition');
+                    let filename = 'converted_image.' + selectedOutputFormat; // Default filename
+
+                    if (contentDisposition && contentDisposition.includes('filename=')) {
+                        const filenameMatch = contentDisposition.match(/filename="?([^"]+)"?/);
+                        if (filenameMatch && filenameMatch[1]) {
+                            filename = filenameMatch[1];
+                        }
+                    }
+
+                    if (fileUrl) {
+                        URL.revokeObjectURL(fileUrl);
+                    }
+
+                    fileUrl = URL.createObjectURL(blob);
+
+                    divResponse.innerHTML = `
+                        <a href="${fileUrl}" download="${filename}" class="btn btn-primary">
+                            Download Converted Image
+                        </a>
+                    `;
+                    divResponse.style.display = 'block';
+                });
+            } else {
+                return response.json().then(data => {
+                    errorMessage.textContent = data.detail || "An unknown error occurred.";
+                    divError.style.display = 'block';
+                });
+            }
+        })
+        .catch(error => {
+            errorMessage.textContent = "Please try again later.";
+            divError.style.display = 'block';
+            spinner.style.display = 'none';
+            outputFormatSelect.disabled = false; // Re-enable output format selection
+            console.error('Fetch error:', error);
+        });
+    });
+});
+
+function handleFileSelect(event) {
+    const fileInput = event.target;
+    const file = fileInput.files[0];
+
+    if (!file) {
+        // No file selected
+        outputFormatSelect.innerHTML = '';
+        outputFormatSelect.disabled = true;
+        return;
+    }
+
+    // Extract file extension
+    const fileName = file.name;
+    const extension = fileName.split('.').pop().toLowerCase();
+
+    // Make a GET request to the API to get the format mappings
+    fetch('{{ fast_api_path_full_path }}', {
+        method: 'GET',
+        headers: {
+            "Authorization": "Bearer {{ token }}"
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Find the possible output formats for the selected file's extension
+        const outputFormats = data[extension];
+        if (outputFormats && outputFormats.length > 0) {
+            // Populate the output format select element
+            outputFormatSelect.innerHTML = '';
+            outputFormats.forEach(format => {
+                const option = document.createElement('option');
+                option.value = format;
+                option.textContent = format.toUpperCase();
+                outputFormatSelect.appendChild(option);
+            });
+            outputFormatSelect.disabled = false;
+        } else {
+            // No output formats available
+            outputFormatSelect.innerHTML = '';
+            outputFormatSelect.disabled = true;
+            alert('No available output formats for the selected file type.');
+        }
+    })
+    .catch(error => {
+        console.error('Error fetching format mappings:', error);
+        alert('Error fetching format mappings. Please try again later.');
+    });
+}
+</script>
+{% endblock %}

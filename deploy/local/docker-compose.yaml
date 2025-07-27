@@ -1,0 +1,161 @@
+# This is only for local development
+services:
+  db:
+    image: mysql:8.0
+    container_name: doodleops_db
+    platform: linux/amd64
+    restart: unless-stopped
+    env_file: "${PWD}/deploy/local/app_web/.env"
+    healthcheck:
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      # the variables come from the .env file above
+      test: "mysqladmin ping -h localhost -u $$MYSQL_USER --password=$$MYSQL_PASSWORD"
+    ports:
+      - "3306:3306"
+    networks:
+      - doodleops_net
+
+  app_web:
+    image: "doodleops_web:${APP_WEB_VERSION}"
+    build:
+      context: "${PWD}/app_web"
+      dockerfile: "${PWD}/app_web/Dockerfile"
+    container_name: doodleops_web
+    env_file:
+      - "${PWD}/deploy/local/app_web/.env"
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    networks:
+      - doodleops_net
+    working_dir: /app_web
+    volumes:
+      - "${PWD}/app_web:/app_web"
+      - "${PWD}/../keys:/keys"
+    depends_on:
+      - db
+      - redis
+
+  app_api:
+    image: "doodleops_api:${APP_API_VERSION}"
+    build:
+      context: "${PWD}/app_api"
+      dockerfile: "${PWD}/app_api/Dockerfile"
+    container_name: doodleops_api
+    env_file:
+      - "${PWD}/deploy/local/app_api/.env"
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+    networks:
+      - doodleops_net
+    working_dir: /app_api
+    volumes:
+      - "${PWD}/app_api:/app_api"
+      - "${PWD}/../keys:/keys"
+    depends_on:
+      - db
+      - redis
+
+  redis:
+    container_name: doodleops_redis
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    networks:
+      - doodleops_net
+
+  redis-browser:
+    container_name: doodleops_redis_browser
+    platform: linux/amd64
+    hostname: redis-commander
+    image: rediscommander/redis-commander:latest
+    restart: always
+    environment:
+      - REDIS_HOST=doodleops_redis
+      - REDIS_PORT=6379
+    ports:
+      - "8081:8081"
+    networks:
+      - doodleops_net
+    depends_on:
+      - redis
+
+  celery_worker:
+    image: "doodleops_web:${APP_WEB_VERSION}"
+    build:
+      context: "${PWD}/app_web"
+      dockerfile: "${PWD}/app_web/Dockerfile"
+    container_name: doodleops_celery_worker
+    env_file:
+      - "${PWD}/deploy/local/app_web/.env"
+    restart: unless-stopped
+    working_dir: /app_web
+    volumes:
+      - "${PWD}/app_web:/app_web"
+      - "${PWD}/../keys:/keys"
+    depends_on:
+      - app_web
+    networks:
+      - doodleops_net
+
+  celery_beat:
+    image: "doodleops_web:${APP_WEB_VERSION}"
+    build:
+      context: "${PWD}/app_web"
+      dockerfile: "${PWD}/app_web/Dockerfile"
+    container_name: doodleops_celery_beat
+    env_file:
+      - "${PWD}/deploy/local/app_web/.env"
+    restart: unless-stopped
+    working_dir: /app_web
+    volumes:
+      - "${PWD}/app_web:/app_web"
+      - "${PWD}/../keys:/keys"
+    depends_on:
+      - app_web
+    networks:
+      - doodleops_net
+
+  celery_flower:
+    image: "doodleops_web:${APP_WEB_VERSION}"
+    build:
+      context: "${PWD}/app_web"
+      dockerfile: "${PWD}/app_web/Dockerfile"
+    container_name: doodleops_celery_flower
+    env_file:
+      - "${PWD}/deploy/local/app_web/.env"
+    restart: unless-stopped
+    working_dir: /app_web
+    volumes:
+      - "${PWD}/app_web:/app_web"
+      - "${PWD}/../keys:/keys"
+    ports:
+      - "5555:5555"
+    networks:
+      - doodleops_net
+
+  otel_collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: otel_collector
+    volumes:
+      - "${PWD}/deploy/local/app_web/collector-config.yaml:/etc/otel/config.yaml"
+    ports:
+      - "4317:4317"  # Expose OTLP gRPC port
+    command: ["--config=/etc/otel/config.yaml"]
+    networks:
+      - doodleops_net
+
+  zipkin:
+    image: openzipkin/zipkin
+    container_name: zipkin
+    ports:
+      - "9411:9411"  # Expose the Zipkin web UI and API port
+    networks:
+      - doodleops_net
+
+networks:
+  doodleops_net:
+    external: true

@@ -1,0 +1,648 @@
+steps:
+  - id: 'set-cloud-build-env-variables'
+    name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'bash'
+    env:
+      - 'PROJECT_ID=$PROJECT_ID'
+    args:
+      - '-c'
+      - |
+        set -e
+        
+        echo "Project Name: $PROJECT_ID"
+        
+        echo "Setting the old deployed WEB image versions to the .env files."
+        gcloud run services describe app-web --region us-central1 | grep 'Image:' | awk -F ':' '{print $(NF)}' | tr -d ' ' > DEPLOYED_APP_WEB_IMAGE_VERSION.env
+        echo "I writen the old deployed app-web image version to DEPLOYED_APP_WEB_IMAGE_VERSION.env"
+        
+        echo "Setting the old deployed API image versions to the .env files."
+        gcloud run services describe app-api --region us-central1 | grep 'Image:' | awk -F ':' '{print $(NF)}' | tr -d ' ' > DEPLOYED_APP_API_IMAGE_VERSION.env
+        echo "I writen the old deployed app-api image version to DEPLOYED_APP_API_IMAGE_VERSION.env"
+        
+        echo "Setting the old deployed APP API DOCS image versions to the .env files."
+        gcloud run services describe app-docs-v1 --region us-central1 | grep 'Image:' | awk -F ':' '{print $(NF)}' | tr -d ' ' > DEPLOYED_APP_API_DOCS_IMAGE_VERSION.env
+        echo "I writen the old deployed app-api docs image version to DEPLOYED_APP_API_DOCS_IMAGE_VERSION.env"
+        
+        echo "Setting the old deployed APP API AI image versions to the .env files."
+        gcloud run services describe app-ai-v1 --region us-central1 | grep 'Image:' | awk -F ':' '{print $(NF)}' | tr -d ' ' > DEPLOYED_APP_API_AI_IMAGE_VERSION.env
+        echo "I writen the old deployed app-api AI image version to DEPLOYED_APP_API_AI_IMAGE_VERSION.env"
+        
+        echo "Setting the old deployed APP API IMAGES image versions to the .env files."
+        gcloud run services describe app-images-v1 --region us-central1 | grep 'Image:' | awk -F ':' '{print $(NF)}' | tr -d ' ' > DEPLOYED_APP_API_IMAGES_IMAGE_VERSION.env
+        echo "I writen the old deployed app-api images image version to DEPLOYED_APP_API_IMAGES_IMAGE_VERSION.env"
+        
+        echo "Setting the old deployed APP API PDF image versions to the .env files."
+        gcloud run services describe app-pdf-v1 --region us-central1 | grep 'Image:' | awk -F ':' '{print $(NF)}' | tr -d ' ' > DEPLOYED_APP_API_PDF_IMAGE_VERSION.env
+        echo "I writen the old deployed app-api pdf image version to DEPLOYED_APP_API_PDF_IMAGE_VERSION.env"
+
+        cat ./app_api/VERSION > GIT_APP_API_IMAGE_VERSION.env
+        echo "I have written the git app-api image version to GIT_APP_API_IMAGE_VERSION.env"
+        
+        cat ./app_web/VERSION > GIT_APP_WEB_IMAGE_VERSION.env
+        echo "I have written the git app-web image version to GIT_APP_WEB_IMAGE_VERSION.env"
+        
+        cat ./app_api/app_docs/cloud_run_container_app_docs/v1/VERSION > GIT_APP_API_DOCS_IMAGE_VERSION.env
+        echo "I have written the git app-api docs image version to GIT_APP_API_DOCS_IMAGE_VERSION.env"
+        
+        cat ./app_api/app_ai/cloud_run_container_app_ai/v1/VERSION > GIT_APP_API_AI_IMAGE_VERSION.env
+        echo "I have written the git app-api AI image version to GIT_APP_API_AI_IMAGE_VERSION.env"
+        
+        cat ./app_api/app_images/cloud_run_container_app_images/v1/VERSION > GIT_APP_API_IMAGES_IMAGE_VERSION.env
+        echo "I have written the git app-api images image version to GIT_APP_API_IMAGES_IMAGE_VERSION.env"
+        
+        cat ./app_api/app_pdf/cloud_run_container_app_pdf/v1/VERSION > GIT_APP_API_PDF_IMAGE_VERSION.env
+        echo "I have written the git app-api pdf image version to GIT_APP_API_PDF_IMAGE_VERSION.env"
+        
+        mkdir -p /workspace/app_api/app_images/cloud_run_container_app_images/v1/ignored_ml_models/
+        gsutil cp gs://ml-models-and-resources/app_api/app_images/cloud_run_container_app_images/v1/ignored_ml_models/u2net.onnx /workspace/app_api/app_images/cloud_run_container_app_images/v1/ignored_ml_models/u2net.onnx
+        
+        echo "I have copied the u2net.onnx file to the app_images/cloud_run_container_app_images/v1/ignored_ml_models/ directory."
+        ls -lh /workspace/app_api/app_images/cloud_run_container_app_images/v1/ignored_ml_models/u2net.onnx | awk '{print $5}'
+
+        apt-get update && apt-get install -y jq
+        
+        echo "Setting the MYSQL_HOST and REDIS_HOST to the .env files."
+        gcloud sql instances describe doodleops-mysql --format=json | jq -r '.ipAddresses[] | select(.type == "PRIVATE") | .ipAddress' > MYSQL_HOST.env
+        gcloud redis instances describe doodleops-redis --region=us-central1 --format=json | jq -r '.host' > REDIS_HOST.env
+        echo "All .env files are ok."
+
+        exit 0
+
+  # Check if the currently deployed image version matches the desired version.
+  # If it does, skip the build.
+  # Otherwise, check if the image tag already exists in the registry.
+  # If the image tag exists, exit with an error message.
+  - id: "check-if-image-tags-already-exist"
+    name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        set -e
+        echo "Checking if we need to build the images and if the image tags already exists in the registry."
+
+        _DEPLOYED_APP_WEB_IMAGE_VERSION=$(cat DEPLOYED_APP_WEB_IMAGE_VERSION.env)
+        _DEPLOYED_APP_API_IMAGE_VERSION=$(cat DEPLOYED_APP_API_IMAGE_VERSION.env)
+        _DEPLOYED_APP_API_DOCS_IMAGE_VERSION=$(cat DEPLOYED_APP_API_DOCS_IMAGE_VERSION.env)
+        _DEPLOYED_APP_API_AI_IMAGE_VERSION=$(cat DEPLOYED_APP_API_AI_IMAGE_VERSION.env)
+        _DEPLOYED_APP_API_IMAGES_IMAGE_VERSION=$(cat DEPLOYED_APP_API_IMAGES_IMAGE_VERSION.env)
+        _DEPLOYED_APP_API_PDF_IMAGE_VERSION=$(cat DEPLOYED_APP_API_PDF_IMAGE_VERSION.env)
+        
+        _GIT_APP_WEB_IMAGE_VERSION=$(cat GIT_APP_WEB_IMAGE_VERSION.env)
+        _GIT_APP_API_IMAGE_VERSION=$(cat GIT_APP_API_IMAGE_VERSION.env)
+        _GIT_APP_API_DOCS_IMAGE_VERSION=$(cat GIT_APP_API_DOCS_IMAGE_VERSION.env)
+        _GIT_APP_API_AI_IMAGE_VERSION=$(cat GIT_APP_API_AI_IMAGE_VERSION.env)
+        _GIT_APP_API_IMAGES_IMAGE_VERSION=$(cat GIT_APP_API_IMAGES_IMAGE_VERSION.env)
+        _GIT_APP_API_PDF_IMAGE_VERSION=$(cat GIT_APP_API_PDF_IMAGE_VERSION.env)
+        
+
+        if [ "$${_DEPLOYED_APP_API_IMAGE_VERSION}" == "$${_GIT_APP_API_IMAGE_VERSION}" ]; then
+          echo "Deployed app-api image version is the same as the current version. Skipping build."
+        else
+            IMAGE_EXISTS=$(gcloud artifacts docker images list us-central1-docker.pkg.dev/doodleops-prod/docker-repo/app_api --include-tags --filter="tags:$${_GIT_APP_API_IMAGE_VERSION}")
+            if [ -z "$${IMAGE_EXISTS}" ]; then
+                echo "Image APP API tag $${_GIT_APP_API_IMAGE_VERSION} does not exist. Proceeding with build."
+            else
+                echo "Image APP API tag: $${_GIT_APP_API_IMAGE_VERSION} already exists. Please update the version in app_api/VERSION file."
+                exit 1
+            fi
+        fi
+
+        if [ "$${_DEPLOYED_APP_WEB_IMAGE_VERSION}" == "$${_GIT_APP_WEB_IMAGE_VERSION}" ]; then
+          echo "Deployed app-web image version is the same as the current version. Skipping build."
+        else
+            IMAGE_EXISTS=$(gcloud artifacts docker images list us-central1-docker.pkg.dev/doodleops-prod/docker-repo/app_web --include-tags --filter="tags:$${_GIT_APP_WEB_IMAGE_VERSION}")
+            if [ -z "$${IMAGE_EXISTS}" ]; then
+                echo "Image APP WEB tag $${_GIT_APP_WEB_IMAGE_VERSION} does not exist. Proceeding with build."
+            else
+                echo "Image APP WEB tag: $${_GIT_APP_WEB_IMAGE_VERSION} already exists. Please update the version in app_web/VERSION file."
+                exit 1
+            fi
+        fi
+        
+        if [ "$${_DEPLOYED_APP_API_DOCS_IMAGE_VERSION}" == "$${_GIT_APP_API_DOCS_IMAGE_VERSION}" ]; then
+          echo "Deployed app-api docs image version is the same as the current version. Skipping build."
+        else
+            IMAGE_EXISTS=$(gcloud artifacts docker images list us-central1-docker.pkg.dev/doodleops-prod/docker-repo/app_docs_v1 --include-tags --filter="tags:$${_GIT_APP_API_DOCS_IMAGE_VERSION}")
+            if [ -z "$${IMAGE_EXISTS}" ]; then
+                echo "Image APP API DOCS tag $${_GIT_APP_API_DOCS_IMAGE_VERSION} does not exist. Proceeding with build."
+            else
+                echo "Image APP API DOCS tag: $${_GIT_APP_API_DOCS_IMAGE_VERSION} already exists. Please update the version in app_api/app_docs/cloud_run_container_app_docs/v1/VERSION file."
+                exit 1
+            fi
+        fi
+        
+        if [ "$${_DEPLOYED_APP_API_AI_IMAGE_VERSION}" == "$${_GIT_APP_API_AI_IMAGE_VERSION}" ]; then
+          echo "Deployed app-api AI image version is the same as the current version. Skipping build."
+        else
+            IMAGE_EXISTS=$(gcloud artifacts docker images list us-central1-docker.pkg.dev/doodleops-prod/docker-repo/app_ai_v1 --include-tags --filter="tags:$${_GIT_APP_API_AI_IMAGE_VERSION}")
+            if [ -z "$${IMAGE_EXISTS}" ]; then
+                echo "Image APP API AI tag $${_GIT_APP_API_AI_IMAGE_VERSION} does not exist. Proceeding with build."
+            else
+                echo "Image APP API AI tag: $${_GIT_APP_API_AI_IMAGE_VERSION} already exists. Please update the version in app_api/app_ai/cloud_run_container_app_ai/v1/VERSION file."
+                exit 1
+            fi
+        fi
+        
+        if [ "$${_DEPLOYED_APP_API_IMAGES_IMAGE_VERSION}" == "$${_GIT_APP_API_IMAGES_IMAGE_VERSION}" ]; then
+          echo "Deployed app-api images image version is the same as the current version. Skipping build."
+        else
+            IMAGE_EXISTS=$(gcloud artifacts docker images list us-central1-docker.pkg.dev/doodleops-prod/docker-repo/app_images_v1 --include-tags --filter="tags:$${_GIT_APP_API_IMAGES_IMAGE_VERSION}")
+            if [ -z "$${IMAGE_EXISTS}" ]; then
+                echo "Image APP API IMAGES tag $${_GIT_APP_API_IMAGES_IMAGE_VERSION} does not exist. Proceeding with build."
+            else
+                echo "Image APP API IMAGES tag: $${_GIT_APP_API_IMAGES_IMAGE_VERSION} already exists. Please update the version in app_api/app_images/cloud_run_container_app_images/v1/VERSION file."
+                exit 1
+            fi
+        fi
+        
+        if [ "$${_DEPLOYED_APP_API_PDF_IMAGE_VERSION}" == "$${_GIT_APP_API_PDF_IMAGE_VERSION}" ]; then
+          echo "Deployed app-api pdf image version is the same as the current version. Skipping build."
+        else
+            IMAGE_EXISTS=$(gcloud artifacts docker images list us-central1-docker.pkg.dev/doodleops-prod/docker-repo/app_pdf_v1 --include-tags --filter="tags:$${_GIT_APP_API_PDF_IMAGE_VERSION}")
+            if [ -z "$${IMAGE_EXISTS}" ]; then
+                echo "Image APP API PDF tag $${_GIT_APP_API_PDF_IMAGE_VERSION} does not exist. Proceeding with build."
+            else
+                echo "Image APP API PDF tag: $${_GIT_APP_API_PDF_IMAGE_VERSION} already exists. Please update the version in app_api/app_pdf/cloud_run_container_app_pdf/v1/VERSION file."
+                exit 1
+            fi
+        fi
+
+        exit 0
+    waitFor: ['set-cloud-build-env-variables']
+
+  - id: 'build-push-app-api-docker-image'
+    name: 'gcr.io/cloud-builders/docker'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        set -e
+
+        if [ "$(cat DEPLOYED_APP_API_IMAGE_VERSION.env)" == "$(cat GIT_APP_API_IMAGE_VERSION.env)" ]; then
+          echo "Deployed APP API image version is the same as the current version. Skipping image build and push."
+        else
+          _IMAGE="us-central1-docker.pkg.dev/doodleops-prod/docker-repo/app_api:$(cat GIT_APP_API_IMAGE_VERSION.env)"
+
+          echo "Building Docker image: $${_IMAGE}"
+          docker build --no-cache --platform linux/amd64 -t $${_IMAGE} -f app_api/Dockerfile app_api/
+
+          echo "Pushing Docker image: $${_IMAGE}"
+          docker push $${_IMAGE}
+          echo "Pushed Docker image: $${_IMAGE}"
+        fi
+        exit 0
+    waitFor: ['check-if-image-tags-already-exist']
+
+  - id: 'build-push-app-web-docker-image'
+    name: 'gcr.io/cloud-builders/docker'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        set -e
+
+        if [ "$(cat DEPLOYED_APP_WEB_IMAGE_VERSION.env)" == "$(cat GIT_APP_WEB_IMAGE_VERSION.env)" ]; then
+          echo "Deployed APP WEB image version is the same as the current version. Skipping image build and push."
+        else
+          _IMAGE="us-central1-docker.pkg.dev/doodleops-prod/docker-repo/app_web:$(cat GIT_APP_WEB_IMAGE_VERSION.env)"
+
+          echo "Building Docker image: $${_IMAGE}"
+          docker build --no-cache --platform linux/amd64 -t $${_IMAGE} -f app_web/Dockerfile app_web/
+
+          echo "Pushing Docker image: $${_IMAGE}"
+          docker push $${_IMAGE}
+          echo "Pushed Docker image: $${_IMAGE}"
+        fi
+        exit 0
+    waitFor: ['check-if-image-tags-already-exist']
+
+  - id: 'build-push-app-api-docs-docker-image'
+    name: 'gcr.io/cloud-builders/docker'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        set -e
+
+        if [ "$(cat DEPLOYED_APP_API_DOCS_IMAGE_VERSION.env)" == "$(cat GIT_APP_API_DOCS_IMAGE_VERSION.env)" ]; then
+          echo "Deployed APP API DOCS image version is the same as the current version. Skipping image build and push."
+        else
+          _IMAGE="us-central1-docker.pkg.dev/doodleops-prod/docker-repo/app_docs_v1:$(cat GIT_APP_API_DOCS_IMAGE_VERSION.env)"
+
+          echo "Building Docker image: $${_IMAGE}"
+          docker build --no-cache --platform linux/amd64 -t $${_IMAGE} -f app_api/app_docs/cloud_run_container_app_docs/v1/Dockerfile app_api/app_docs/cloud_run_container_app_docs/v1/
+
+          echo "Pushing Docker image: $${_IMAGE}"
+          docker push $${_IMAGE}
+          echo "Pushed Docker image: $${_IMAGE}"
+        fi
+        exit 0
+    waitFor: ['check-if-image-tags-already-exist']
+
+  - id: 'build-push-app-api-ai-docker-image'
+    name: 'gcr.io/cloud-builders/docker'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        set -e
+        
+        if [ "$(cat DEPLOYED_APP_API_AI_IMAGE_VERSION.env)" == "$(cat GIT_APP_API_AI_IMAGE_VERSION.env)" ]; then
+          echo "Deployed APP API AI image version is the same as the current version. Skipping image build and push."
+        else
+          _IMAGE="us-central1-docker.pkg.dev/doodleops-prod/docker-repo/app_ai_v1:$(cat GIT_APP_API_AI_IMAGE_VERSION.env)"
+          
+          echo "Building Docker image: $${_IMAGE}"
+          docker build --no-cache --platform linux/amd64 -t $${_IMAGE} -f app_api/app_ai/cloud_run_container_app_ai/v1/Dockerfile app_api/app_ai/cloud_run_container_app_ai/v1/
+          
+          echo "Pushing Docker image: $${_IMAGE}"
+          docker push $${_IMAGE}
+          echo "Pushed Docker image: $${_IMAGE}"
+        fi
+        exit 0
+    waitFor: ['check-if-image-tags-already-exist']
+
+  - id: 'build-push-app-api-images-docker-image'
+    name: 'gcr.io/cloud-builders/docker'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        set -e
+        
+        if [ "$(cat DEPLOYED_APP_API_IMAGES_IMAGE_VERSION.env)" == "$(cat GIT_APP_API_IMAGES_IMAGE_VERSION.env)" ]; then
+          echo "Deployed APP API IMAGES image version is the same as the current version. Skipping image build and push."
+        else
+          _IMAGE="us-central1-docker.pkg.dev/doodleops-prod/docker-repo/app_images_v1:$(cat GIT_APP_API_IMAGES_IMAGE_VERSION.env)"
+          
+          echo "Building Docker image: $${_IMAGE}"
+          docker build --no-cache --platform linux/amd64 -t $${_IMAGE} -f app_api/app_images/cloud_run_container_app_images/v1/Dockerfile app_api/app_images/cloud_run_container_app_images/v1/
+          
+          echo "Pushing Docker image: $${_IMAGE}"
+          docker push $${_IMAGE}
+          echo "Pushed Docker image: $${_IMAGE}"
+        fi
+        exit 0
+    waitFor: ['check-if-image-tags-already-exist']
+
+  - id: 'build-push-app-api-pdf-docker-image'
+    name: 'gcr.io/cloud-builders/docker'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        set -e
+        
+        if [ "$(cat DEPLOYED_APP_API_PDF_IMAGE_VERSION.env)" == "$(cat GIT_APP_API_PDF_IMAGE_VERSION.env)" ]; then
+          echo "Deployed APP API PDF image version is the same as the current version. Skipping image build and push."
+        else
+          _IMAGE="us-central1-docker.pkg.dev/doodleops-prod/docker-repo/app_pdf_v1:$(cat GIT_APP_API_PDF_IMAGE_VERSION.env)"
+          
+          echo "Building Docker image: $${_IMAGE}"
+          docker build --no-cache --platform linux/amd64 -t $${_IMAGE} -f app_api/app_pdf/cloud_run_container_app_pdf/v1/Dockerfile app_api/app_pdf/cloud_run_container_app_pdf/v1/
+          
+          echo "Pushing Docker image: $${_IMAGE}"
+          docker push $${_IMAGE}
+          echo "Pushed Docker image: $${_IMAGE}"
+        fi
+        exit 0
+    waitFor: ['check-if-image-tags-already-exist']
+
+  - id: 'deploy-app-api-docker-image'
+    name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        set -e
+
+        if [ "$(cat DEPLOYED_APP_API_IMAGE_VERSION.env)" == "$(cat GIT_APP_API_IMAGE_VERSION.env)" ]; then
+          echo "APP API - Skipping deployment. Deployed image version is the same as the current version."
+        else
+          _IMAGE="us-central1-docker.pkg.dev/doodleops-prod/docker-repo/app_api:$(cat GIT_APP_API_IMAGE_VERSION.env)"
+          echo "Deploying APP API image: $${_IMAGE}"
+          gcloud run deploy app-api --image $${_IMAGE} --region us-central1
+          echo "Deployed APP API image: $${_IMAGE}"
+        fi
+        exit 0
+    waitFor: ['build-push-app-api-docker-image']
+
+  - id: 'deploy-app-web-docker-image'
+    name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        set -e
+
+        if [ "$(cat DEPLOYED_APP_WEB_IMAGE_VERSION.env)" == "$(cat GIT_APP_WEB_IMAGE_VERSION.env)" ]; then
+          echo "APP WEB - Skipping deployment. Deployed image version is the same as the current version."
+        else
+          _IMAGE="us-central1-docker.pkg.dev/doodleops-prod/docker-repo/app_web:$(cat GIT_APP_WEB_IMAGE_VERSION.env)"
+          echo "Deploying APP WEB image: $${_IMAGE}"
+          gcloud run deploy app-web --image $${_IMAGE} --region us-central1
+          echo "Deployed APP WEB image: $${_IMAGE}"
+        fi
+        exit 0
+    waitFor: ['build-push-app-web-docker-image']
+
+  - id: 'deploy-app-api-docs-docker-image'
+    name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        set -
+        
+        if [ "$(cat DEPLOYED_APP_API_DOCS_IMAGE_VERSION.env)" == "$(cat GIT_APP_API_DOCS_IMAGE_VERSION.env)" ]; then
+          echo "APP API DOCS - Skipping deployment. Deployed image version is the same as the current version."
+        else
+          _IMAGE="us-central1-docker.pkg.dev/doodleops-prod/docker-repo/app_docs_v1:$(cat GIT_APP_API_DOCS_IMAGE_VERSION.env)"
+          echo "Deploying APP API DOCS image: $${_IMAGE}"
+          gcloud run deploy app-docs-v1 --image $${_IMAGE} --region us-central1
+          echo "Deployed APP API DOCS image: $${_IMAGE}"
+        fi
+        exit 0
+    waitFor: ['build-push-app-api-docs-docker-image']
+
+
+  - id: 'deploy-app-api-ai-docker-image'
+    name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        set -
+        
+        if [ "$(cat DEPLOYED_APP_API_AI_IMAGE_VERSION.env)" == "$(cat GIT_APP_API_AI_IMAGE_VERSION.env)" ]; then
+          echo "APP API AI - Skipping deployment. Deployed image version is the same as the current version."
+        else
+          _IMAGE="us-central1-docker.pkg.dev/doodleops-prod/docker-repo/app_ai_v1:$(cat GIT_APP_API_AI_IMAGE_VERSION.env)"
+          echo "Deploying APP API AI image: $${_IMAGE}"
+          gcloud run deploy app-ai-v1 --image $${_IMAGE} --region us-central1
+          echo "Deployed APP API AI image: $${_IMAGE}"
+        fi
+        exit 0
+    waitFor: ['build-push-app-api-ai-docker-image']
+
+  - id: 'deploy-app-api-images-docker-image'
+    name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        set -
+        
+        if [ "$(cat DEPLOYED_APP_API_IMAGES_IMAGE_VERSION.env)" == "$(cat GIT_APP_API_IMAGES_IMAGE_VERSION.env)" ]; then
+          echo "APP API IMAGES - Skipping deployment. Deployed image version is the same as the current version."
+        else
+          _IMAGE="us-central1-docker.pkg.dev/doodleops-prod/docker-repo/app_images_v1:$(cat GIT_APP_API_IMAGES_IMAGE_VERSION.env)"
+          echo "Deploying APP API IMAGES image: $${_IMAGE}"
+          gcloud run deploy app-images-v1 --image $${_IMAGE} --region us-central1
+          echo "Deployed APP API IMAGES image: $${_IMAGE}"
+        fi
+        exit 0
+    waitFor: ['build-push-app-api-images-docker-image']
+
+  - id: 'deploy-app-api-pdf-docker-image'
+    name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        set -
+        
+        if [ "$(cat DEPLOYED_APP_API_PDF_IMAGE_VERSION.env)" == "$(cat GIT_APP_API_PDF_IMAGE_VERSION.env)" ]; then
+          echo "APP API PDF - Skipping deployment. Deployed image version is the same as the current version."
+        else
+          _IMAGE="us-central1-docker.pkg.dev/doodleops-prod/docker-repo/app_pdf_v1:$(cat GIT_APP_API_PDF_IMAGE_VERSION.env)"
+          echo "Deploying APP API PDF image: $${_IMAGE}"
+          gcloud run deploy app-pdf-v1 --image $${_IMAGE} --region us-central1
+          echo "Deployed APP API PDF image: $${_IMAGE}"
+        fi
+        exit 0
+    waitFor: ['build-push-app-api-pdf-docker-image']
+
+  - id: 'run-django-commands'
+    name: 'python:3.10'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        set -e
+        set -a
+
+        export MYSQL_HOST=$(cat MYSQL_HOST.env)
+        export REDIS_HOST=$(cat REDIS_HOST.env)
+        export GCP_PROJECT_ID="doodleops-prod"
+        export ENV_MODE="dev"
+
+        apt-get -y update \
+        && apt-get install --yes libgdal-dev mariadb-client \
+        && apt-get clean \
+        && rm -rf /var/lib/apt/lists/*
+        pip install -r app_web/requirements.txt && pip install mysqlclient==2.2.0
+
+        echo "Changing directory to app_web"
+        cd app_web
+        
+        echo "Running: python manage.py migrate"
+        
+        python manage.py migrate
+                
+        echo "Script completed successfully."
+        exit 0
+
+    waitFor: ['deploy-app-api-docker-image', 'deploy-app-web-docker-image']
+
+  - id: 'setting-firewall-rule-if-needed'
+    name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        set -a
+        
+        _CELERY_BEAT_VM="celery-beat-vm";
+        _CELERY_WORKER_VM="celery-worker-vm";
+        _ZONE="us-central1-c";
+        _CLOUD_BUILD_IP_ADDRESS="0.0.0.0/0";
+        _CELERY_VMs_FIREWALL_RULE_NAME="allow-cloud-build-vm-ssh-access";
+        _CELERY_VMs_TAG="ssh-cloud-build-to-celery-vms-allowed";
+        _VPC_NAME="doodleops-vpc"
+
+        echo "Removing tags from Celery VMs."
+
+        gcloud compute instances remove-tags $${_CELERY_BEAT_VM} --zone=$${_ZONE} --tags=$${_CELERY_VMs_TAG} --quiet || true;
+        gcloud compute instances remove-tags $${_CELERY_WORKER_VM} --zone=$${_ZONE} --tags=$${_CELERY_VMs_TAG} --quiet || true;
+        gcloud compute firewall-rules delete $${_CELERY_VMs_FIREWALL_RULE_NAME} --quiet || true;
+
+        echo "Creating firewall rule to allow Cloud Build VM to SSH into Celery VMs."
+        gcloud compute firewall-rules create $${_CELERY_VMs_FIREWALL_RULE_NAME} \
+        --direction=INGRESS \
+        --priority=1000 \
+        --action=ALLOW \
+        --network=$${_VPC_NAME} \
+        --rules="tcp:22" \
+        --source-ranges=$${_CLOUD_BUILD_IP_ADDRESS} \
+        --target-tags=$${_CELERY_VMs_TAG};
+
+        echo "Adding tags to Celery VMs."
+        gcloud compute instances add-tags $${_CELERY_BEAT_VM} --tags=$${_CELERY_VMs_TAG} --zone=$${_ZONE};
+        gcloud compute instances add-tags $${_CELERY_WORKER_VM} --tags=$${_CELERY_VMs_TAG} --zone=$${_ZONE};
+
+        exit 0
+    waitFor: ['run-django-commands']
+
+  - id: 'create-ssh-keys'
+    name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        set -e
+
+        _CELERY_BEAT_VM_NAME="celery-beat-vm"
+        _CELERY_WORKER_VM_NAME="celery-worker-vm"
+        _ZONE="us-central1-c"
+        
+        echo "Creating SSH keys for Celery VMs."
+        
+        gcloud compute ssh cloud_build@$${_CELERY_BEAT_VM_NAME} --zone=$${_ZONE} --quiet --tunnel-through-iap --verbosity=debug --ssh-flag="-n" --ssh-flag="-T" --command="echo 'SSH keys created for BEAT VM'"
+        gcloud compute ssh cloud_build@$${_CELERY_WORKER_VM_NAME} --zone=$${_ZONE} --quiet --tunnel-through-iap --verbosity=debug --ssh-flag="-n" --ssh-flag="-T" --command="echo 'SSH keys created for WORKER VM'"
+        
+        exit 0
+    waitFor: ['setting-firewall-rule-if-needed']
+
+
+  - id: 'run-new-celery-beat-docker-image-if-needed'
+    name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        set -a
+
+        _GCP_PROJECT_NAME="doodleops-prod"
+        _ZONE="us-central1-c"
+        _CONTAINER_NAME="celery_beat"
+        _CELERY_VM_NAME="celery-beat-vm"
+        _CELERY_VMs_TAG="ssh-cloud-build-to-celery-vms-allowed"
+        _GIT_APP_WEB_IMAGE_VERSION=$(cat GIT_APP_WEB_IMAGE_VERSION.env)
+        _NEW_CONTAINER_NAME=\"$${_CONTAINER_NAME}_$${_GIT_APP_WEB_IMAGE_VERSION}\"
+        _NEW_IMAGE="us-central1-docker.pkg.dev/doodleops-prod/docker-repo/app_web:$${_GIT_APP_WEB_IMAGE_VERSION}"
+        
+        echo "New image: $${_NEW_IMAGE}"
+        
+        echo "Checking if the new container is already running."
+        echo "New container name: $${_NEW_CONTAINER_NAME}"
+        
+        if docker ps -q -f name=$${_NEW_CONTAINER_NAME} | grep -q .; then \
+            echo 'Container $${_NEW_CONTAINER_NAME} is already running. No update needed.';
+        else
+          echo "SSHing into Celery Beat VM to deploy the new image."
+          gcloud compute ssh cloud_build@$${_CELERY_VM_NAME} --zone=$${_ZONE} --quiet --tunnel-through-iap --command="\
+            echo 'Hello from the Celery Beat VM!'; \
+            docker login -u _json_key --password-stdin https://us-central1-docker.pkg.dev < /var/lib/service_account_key.json > /dev/null 2>&1; \
+            docker pull $${_NEW_IMAGE}; \
+            docker run --name $${_NEW_CONTAINER_NAME} \
+              --log-driver=gcplogs --log-opt gcp-project=$${_GCP_PROJECT_NAME} \
+              -itd --env-file /var/lib/WEB_APP_VARIABLES.env $${_NEW_IMAGE}; \
+            sleep 20; \
+            if docker ps -q -f name=$${_NEW_CONTAINER_NAME} | grep -q .; then \
+              echo 'New container started successfully.'; \
+              echo 'Removing old containers...'; \
+              docker ps -a --format '{{.Names}}' | grep -v "^$${_NEW_CONTAINER_NAME}$" | xargs docker stop; \
+              sleep 30; \
+              docker ps -a --format '{{.Names}}' | grep -v "^$${_NEW_CONTAINER_NAME}$" | xargs docker rm; \
+              echo 'Removing unused images...'; \
+              docker image prune -af; \
+            else \
+              echo 'Failed to start the new container. Old containers will not be stopped.'; \
+            fi; \
+          "
+          echo "${_CELERY_VM_NAME} is updated with the new image."
+          gcloud compute instances remove-tags $${_CELERY_VM_NAME} --zone=$${_ZONE} --tags=$${_CELERY_VMs_TAG} --quiet || true
+        fi
+        exit 0
+    waitFor: ['setting-firewall-rule-if-needed', 'create-ssh-keys']
+
+  - id: 'run-new-celery-worker-docker-image-if-needed'
+    name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        set -a
+
+        _GCP_PROJECT_NAME="doodleops-prod"
+        _ZONE="us-central1-c"
+        _CONTAINER_NAME="celery_worker"
+        _CELERY_VM_NAME="celery-worker-vm"
+        _CELERY_VMs_TAG="ssh-cloud-build-to-celery-vms-allowed"
+        _GIT_APP_WEB_IMAGE_VERSION=$(cat GIT_APP_WEB_IMAGE_VERSION.env)
+        _NEW_CONTAINER_NAME=\"$${_CONTAINER_NAME}_$${_GIT_APP_WEB_IMAGE_VERSION}\"
+        _NEW_IMAGE="us-central1-docker.pkg.dev/doodleops-prod/docker-repo/app_web:$${_GIT_APP_WEB_IMAGE_VERSION}"
+
+        if docker ps -q -f name=$${_NEW_CONTAINER_NAME} | grep -q .; then \
+            echo 'Container $${_NEW_CONTAINER_NAME} is already running. No update needed.';
+        else
+          echo "SSHing into Celery Worker VM to deploy the new image."
+          gcloud compute ssh cloud_build@$${_CELERY_VM_NAME} --zone=$${_ZONE} --quiet --tunnel-through-iap --command="\
+            echo 'Hello from the Celery Worker VM!'; \
+            docker login -u _json_key --password-stdin https://us-central1-docker.pkg.dev < /var/lib/service_account_key.json > /dev/null 2>&1; \
+            docker pull $${_NEW_IMAGE}; \
+            docker run --name $${_NEW_CONTAINER_NAME} \
+              --log-driver=gcplogs --log-opt gcp-project=$${_GCP_PROJECT_NAME} \
+              -itd --env-file /var/lib/WEB_APP_VARIABLES.env $${_NEW_IMAGE}; \
+            sleep 20; \
+            if docker ps -q -f name=$${_NEW_CONTAINER_NAME} | grep -q .; then \
+              echo 'New container started successfully.'; \
+              echo 'Gracefully stopping the old Celery Worker container.'; \
+              docker ps -a --format '{{.Names}}' | grep -v "^$${_NEW_CONTAINER_NAME}$" | xargs docker stop; \
+              sleep 30; \
+              docker ps -a --format '{{.Names}}' | grep -v "^$${_NEW_CONTAINER_NAME}$" | xargs docker rm; \
+              echo 'Removing unused images...'; \
+              docker image prune -af; \
+            else \
+              echo 'Failed to start the new container. Old container will not be stopped.'; \
+            fi; \
+          "
+          echo "$${_CELERY_VM_NAME} is updated with the new image."
+
+          gcloud compute instances remove-tags $${_CELERY_VM_NAME} --zone=$${_ZONE} --tags=$${_CELERY_VMs_TAG} --quiet || true
+        fi
+        exit 0
+    waitFor: ['setting-firewall-rule-if-needed', 'create-ssh-keys']
+
+  - id: 'remove-firewall-rule-if-needed'
+    name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        set -a
+        set -e
+        
+        _CELERY_BEAT_VM="celery-beat-vm";
+        _CELERY_WORKER_VM="celery-worker-vm";
+        _ZONE="us-central1-c";
+        _CELERY_VMs_TAG="ssh-cloud-build-to-celery-vms-allowed";
+        _CELERY_VMs_FIREWALL_RULE_NAME="allow-cloud-build-vm-ssh-access";
+        
+        gcloud compute instances remove-tags $${_CELERY_BEAT_VM} --zone=$${_ZONE} --tags=$${_CELERY_VMs_TAG} --quiet || true;
+        gcloud compute instances remove-tags $${_CELERY_WORKER_VM} --zone=$${_ZONE} --tags=$${_CELERY_VMs_TAG} --quiet || true;
+        gcloud compute firewall-rules delete $${_CELERY_VMs_FIREWALL_RULE_NAME} --quiet || true;
+        echo "Firewall rule $${_CELERY_VMs_FIREWALL_RULE_NAME} is deleted."
+
+        exit 0
+
+    waitFor: ['run-new-celery-beat-docker-image-if-needed', 'run-new-celery-worker-docker-image-if-needed']
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  dynamicSubstitutions: true
+  automapSubstitutions: true
+  pool:
+    name: 'projects/doodleops-prod/locations/us-central1/workerPools/doodleops-build-pool-no-public'

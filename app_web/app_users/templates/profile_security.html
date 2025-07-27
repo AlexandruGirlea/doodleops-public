@@ -1,0 +1,80 @@
+{% extends "base_profile.html" %}
+{% load static %}
+
+
+{% block profile_content %}
+  <p class="text-center text-muted">
+    📌 This section is not open-source — it's based on a purchased theme whose HTML markup remains proprietary and cannot be shared under open-source terms.
+  </p>
+
+
+<script>
+// Wait for the DOM to be fully loaded
+document.addEventListener('DOMContentLoaded', function() {
+    var form = document.querySelector('.js-validate');
+    form.addEventListener('submit', function(event) {
+        // Clear previous errors
+        var errorElements = form.querySelectorAll('.error');
+        errorElements.forEach(function(el) {
+            el.textContent = '';
+        });
+
+        var errors = {};
+        var password1 = form.querySelector('#password1').value;
+        var password2 = form.querySelector('#password2').value;
+
+        // Check if current password is required and filled
+        var passwordField = form.querySelector('#password');
+        if (passwordField) {
+            var password = passwordField.value;
+            if (!password) {
+                errors['password'] = 'Please enter your current password.';
+            }
+        }
+
+        // Validate new password and confirmation
+        if (!password1) {
+            errors['password1'] = 'Please enter a new password.';
+        } else {
+            if (password1 !== password2) {
+                errors['password2'] = 'Passwords do not match.';
+            }
+
+            if (password1.length < 8) {
+                errors['password1'] = 'Password must be at least 8 characters long.';
+            } else if (password1.length > 100) {
+                errors['password1'] = 'Password must be at most 100 characters long.';
+            }
+
+            if (!/[a-z]/.test(password1)) {
+                errors['password1'] = 'Password must contain at least one lowercase letter.';
+            }
+            if (!/[A-Z]/.test(password1)) {
+                errors['password1'] = 'Password must contain at least one uppercase letter.';
+            }
+            if (!/[0-9]/.test(password1)) {
+                errors['password1'] = 'Password must contain at least one number.';
+            }
+            if (!/[!@#$%^&*(),.?":{}|<>]/.test(password1)) {
+                errors['password1'] = 'Password must contain at least one special character.';
+            }
+        }
+
+        if (!password2) {
+            errors['password2'] = 'Please confirm your new password.';
+        }
+
+        if (Object.keys(errors).length > 0) {
+            event.preventDefault(); // Prevent form submission
+
+            // Display errors under corresponding input fields
+            for (var key in errors) {
+                var field = form.querySelector('#' + key);
+                var errorDiv = field.parentElement.querySelector('.error');
+                errorDiv.textContent = errors[key];
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

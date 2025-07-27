@@ -1,0 +1,190 @@
+{% extends "base_api_apps_view.html" %}
+{% load static %}
+
+{% block html_form_logic %}
+  <p class="text-center text-muted">
+    📌 This section is not open-source — it's based on a purchased theme whose HTML markup remains proprietary and cannot be shared under open-source terms.
+  </p>
+{% endblock %}
+
+{% block scripts %}
+{% if user.is_authenticated %}
+<!-- Include Cropper.js CSS and JS -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const divResponse = document.getElementById('div-response');
+    divResponse.style.display = 'none';
+
+    const spinner = document.getElementById('spinner');
+    spinner.style.display = 'none';
+
+    const divError = document.getElementById('div-error');
+    divError.style.display = 'none';
+
+    const fileInput = document.getElementById('file');
+    const imageContainer = document.getElementById('image-container');
+    const imageElement = document.getElementById('image');
+    const removeCropBoxButton = document.getElementById('remove-crop-box');
+
+    let cropper;
+    let fileUrl;
+
+    fileInput.addEventListener('change', function () {
+        const file = fileInput.files[0];
+
+        if (!file) {
+            return;
+        }
+
+        // Check file size
+        const maxSizeMB = {{ api.other_info.file_size_mb }};
+        const maxSizeBytes = maxSizeMB * 1024 * 1024;
+        if (file.size > maxSizeBytes) {
+            alert('The file size must not exceed ' + maxSizeMB + ' MB.');
+            fileInput.value = ''; // Clear the input
+            return;
+        }
+
+        // Check file type
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+        if (!allowedTypes.includes(file.type)) {
+            alert('Please select a JPEG, JPG, PNG, or GIF image.');
+            fileInput.value = ''; // Clear the input
+            return;
+        }
+
+        // Display the image
+        if (fileUrl) {
+            URL.revokeObjectURL(fileUrl);
+        }
+
+        fileUrl = URL.createObjectURL(file);
+        imageElement.src = fileUrl;
+        imageContainer.style.display = 'block';
+
+        // Initialize Cropper.js
+        if (cropper) {
+            cropper.destroy();
+        }
+
+        cropper = new Cropper(imageElement, {
+            viewMode: 1,
+            autoCropArea: 0.5,
+            movable: true,
+            zoomable: true,
+            rotatable: false,
+            scalable: false,
+            aspectRatio: NaN, // Allow free aspect ratio
+            ready: function () {
+                // Display the remove crop box button
+                removeCropBoxButton.style.display = 'inline-block';
+            }
+        });
+
+        // Remove crop box button event
+        removeCropBoxButton.addEventListener('click', function () {
+            if (cropper) {
+                cropper.clear();
+            }
+        });
+    });
+
+    document.getElementById('image-form').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        divError.style.display = 'none'; // Hide error message for new requests
+
+        const file = fileInput.files[0];
+
+        if (!file) {
+            alert('Please select an image file to process.');
+            return;
+        }
+
+        // Get crop box data
+        if (!cropper) {
+            alert('Please draw a crop box on the image.');
+            return;
+        }
+
+        const cropData = cropper.getData(true); // Get data with rounded values
+
+        // Build crop_box parameter: x1,y1,x2,y2
+        const x1 = Math.round(cropData.x);
+        const y1 = Math.round(cropData.y);
+        const x2 = x1 + Math.round(cropData.width);
+        const y2 = y1 + Math.round(cropData.height);
+
+        const cropBoxParam = `${x1},${y1},${x2},${y2}`;
+
+        spinner.style.display = 'block';
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        // Construct URL with query parameters
+        let url = new URL('{{ fast_api_path_full_path }}');
+        url.searchParams.append('crop_box', cropBoxParam);
+
+        fetch(url.toString(), {
+            method: 'POST',
+            headers: {
+                "Authorization": "Bearer {{ token }}"
+            },
+            body: formData
+        })
+        .then(response => {
+            if (response.status === 200) {
+                return response.blob().then(blob => {
+                    // Extract the filename from the Content-Disposition header
+                    const contentDisposition = response.headers.get('content-disposition');
+                    let extension = file.name.split('.').pop();
+                    let filename = `cropped_image.${extension}`; // Default filename based on file extension
+
+                    if (contentDisposition && contentDisposition.includes('filename=')) {
+                        const filenameMatch = contentDisposition.match(/filename="?([^"]+)"?/);
+                        if (filenameMatch && filenameMatch[1]) {
+                            filename = filenameMatch[1];
+                        }
+                    }
+
+                    if (fileUrl) {
+                        URL.revokeObjectURL(fileUrl);
+                    }
+
+                    fileUrl = URL.createObjectURL(blob);
+
+                    divResponse.innerHTML = `
+                        <img src="${fileUrl}" alt="Cropped Image" class="img-fluid">
+                        <br><br>
+                        <a href="${fileUrl}" download="${filename}" class="btn btn-primary">
+                            Download Cropped Image
+                        </a>
+                    `;
+                    spinner.style.display = 'none';
+                    divResponse.style.display = 'block';
+                });
+            } else {
+                return response.json().then(data => {
+                    const errorMessage = document.getElementById('error-message');
+                    errorMessage.textContent = data.detail || "An unknown error occurred.";
+                    spinner.style.display = 'none';
+                    divError.style.display = 'block';
+                });
+            }
+        })
+        .catch(error => {
+            const errorMessage = document.getElementById('error-message');
+            errorMessage.textContent = "Please try again later.";
+            spinner.style.display = 'none';
+            divError.style.display = 'block';
+            console.error('Fetch error:', error);
+        });
+    });
+});
+</script>
+{% endif %}
+{% endblock %}

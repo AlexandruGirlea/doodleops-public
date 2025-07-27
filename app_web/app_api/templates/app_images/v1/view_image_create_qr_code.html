@@ -1,0 +1,170 @@
+{% extends "base_api_apps_view.html" %}
+{% load static %}
+
+{% block html_form_logic %}
+  <p class="text-center text-muted">
+    📌 This section is not open-source — it's based on a purchased theme whose HTML markup remains proprietary and cannot be shared under open-source terms.
+  </p>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let divResponse;
+let spinner;
+let divError;
+let errorMessage;
+let fileUrl;
+
+document.addEventListener('DOMContentLoaded', () => {
+    divResponse = document.getElementById('div-response');
+    divResponse.style.display = 'none';
+
+    spinner = document.getElementById('spinner');
+    spinner.style.display = 'none';
+
+    divError = document.getElementById('div-error');
+    divError.style.display = 'none';
+
+    // Synchronize Fill Color Picker and Text Input
+    document.getElementById('fill_color_picker').addEventListener('input', function() {
+        let color = this.value.substring(1);
+        document.getElementById('fill_color').value = color.toUpperCase();
+    });
+
+    document.getElementById('fill_color').addEventListener('input', function() {
+        let color = '#' + this.value;
+        document.getElementById('fill_color_picker').value = color;
+    });
+
+    // Synchronize Background Color Picker and Text Input
+    document.getElementById('background_color_picker').addEventListener('input', function() {
+        let color = this.value.substring(1);
+        document.getElementById('background_color').value = color.toUpperCase();
+    });
+
+    document.getElementById('background_color').addEventListener('input', function() {
+        let color = '#' + this.value;
+        document.getElementById('background_color_picker').value = color;
+    });
+});
+
+document.getElementById('qr-code-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    divError.style.display = 'none'; // Hide error message for new requests
+
+    const textInput = document.getElementById('text');
+    const scaleInput = document.getElementById('scale');
+    const outputFormatInput = document.getElementById('output_format');
+    const fillColorInput = document.getElementById('fill_color');
+    const backgroundColorInput = document.getElementById('background_color');
+    const errorCorrectionLevelInput = document.getElementById('error_correction_level');
+    const fileInput = document.getElementById('file');
+
+    // Validation
+    if (textInput.value.trim() === '') {
+        alert('Please enter the text for the QR code.');
+        return;
+    }
+
+    if (textInput.value.length > 1000) {
+        alert('The text must be less than or equal to 1000 characters.');
+        return;
+    }
+
+    if (fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+
+        if (file.size > {{ api.other_info.file_size_mb }} * 1024 * 1024) {
+            alert('The uploaded file must not exceed {{ api.other_info.file_size_mb }} MB.');
+            return;
+        }
+
+        // Check file type
+        const allowedFileTypes = ['image/png'];
+        if (!allowedFileTypes.includes(file.type)) {
+            alert('Only PNG files are allowed for the logo.');
+            return;
+        }
+    }
+
+    spinner.style.display = 'block';
+
+    const formData = new FormData();
+    formData.append('text', textInput.value);
+    formData.append('scale', scaleInput.value);
+    formData.append('output_format', outputFormatInput.value);
+    formData.append('fill_color', fillColorInput.value);
+    formData.append('background_color', backgroundColorInput.value);
+    formData.append('error_correction_level', errorCorrectionLevelInput.value);
+
+    if (fileInput.files.length > 0) {
+        formData.append('file', fileInput.files[0]);
+    }
+
+    fetch('{{ fast_api_path_full_path }}', {
+        method: 'POST',
+        headers: {
+            "Authorization": "Bearer {{ token }}"
+        },
+        body: formData
+    })
+    .then(response => {
+        if (response.status === 200) {
+            return response.blob().then(blob => {
+                // Extract the filename from the Content-Disposition header
+                const contentDisposition = response.headers.get('content-disposition');
+                let filename = 'qr_code.' + outputFormatInput.value.toLowerCase(); // Default filename
+
+                if (contentDisposition && contentDisposition.includes('filename=')) {
+                    const filenameMatch = contentDisposition.match(/filename="?([^"]+)"?/);
+                    if (filenameMatch && filenameMatch[1]) {
+                        filename = filenameMatch[1];
+                    }
+                }
+
+                if (fileUrl) {
+                    URL.revokeObjectURL(fileUrl);
+                }
+
+                fileUrl = URL.createObjectURL(blob);
+
+                // Display the QR code image or provide a download link
+                if (outputFormatInput.value === 'PNG') {
+                    divResponse.innerHTML = `
+                        <img src="${fileUrl}" alt="QR Code" class="img-fluid" style="max-width: 50%; min-width: 200px;">
+                        <br><br>
+                        <a href="${fileUrl}" download="${filename}" class="btn btn-primary">
+                            Download QR Code
+                        </a>
+                    `;
+                } else {
+                    // For SVG, provide a download link only
+                    divResponse.innerHTML = `
+                        <p>Your QR code has been generated.</p>
+                        <a href="${fileUrl}" download="${filename}" class="btn btn-primary">
+                            Download QR Code
+                        </a>
+                    `;
+                }
+                spinner.style.display = 'none';
+                divResponse.style.display = 'block';
+            });
+        } else {
+            return response.json().then(data => {
+                errorMessage = document.getElementById('error-message');
+                errorMessage.textContent = data.detail || "An unknown error occurred.";
+                spinner.style.display = 'none';
+                divError.style.display = 'block';
+            });
+        }
+    })
+    .catch(error => {
+        errorMessage = document.getElementById('error-message');
+        errorMessage.textContent = "Please try again later.";
+        spinner.style.display = 'none';
+        divError.style.display = 'block';
+        console.error('Fetch error:', error);
+    });
+});
+</script>
+{% endblock %}

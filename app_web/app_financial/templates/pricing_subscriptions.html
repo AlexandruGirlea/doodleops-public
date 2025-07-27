@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block main %}
+  <p class="text-center text-muted">
+    📌 This section is not open-source — it's based on a purchased theme whose HTML markup remains proprietary and cannot be shared under open-source terms.
+  </p>
+
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const toggleSwitch = document.querySelector('.js-toggle-switch');
+
+        toggleSwitch.addEventListener('change', function () {
+            const isMonthlyChecked = this.checked;
+
+            const monthlyPlans = document.querySelectorAll('[data-plan-type="monthly"]');
+            const yearlyPlans = document.querySelectorAll('[data-plan-type="yearly"]');
+
+            if (isMonthlyChecked) {
+                monthlyPlans.forEach(plan => plan.style.display = 'none');
+                yearlyPlans.forEach(plan => plan.style.display = 'block');
+            } else {
+                monthlyPlans.forEach(plan => plan.style.display = 'block');
+                yearlyPlans.forEach(plan => plan.style.display = 'none');
+            }
+        });
+    });
+    {% if user.is_authenticated and not has_subscription %}
+    const stripe = Stripe('{{ stripe_key }}');
+
+    function createCheckoutSession(pricing_plan_id) {
+        fetch("{% url 'create_subscriptions_checkout_session' %}?pricing_plan_id=" + pricing_plan_id)
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                if (data.error) {
+                    if (data.error === "Not authenticated") {
+                        window.location.href = "{% url 'login' %}";
+                    } else if (data.error === "Invalid amount") {
+                        alert("Invalid amount");
+                    } else {
+                        alert("Unknown error occurred: " + data.error);
+                    }
+                } else if (data.session_id) {
+                    stripe.redirectToCheckout({
+                        sessionId: data.session_id
+                    });
+                } else {
+                    alert("Unknown error occurred.");
+                }
+            })
+            .catch(error => {
+                console.error('There was an error:', error);
+            });
+    }
+    {% endif %}
+</script>
+
+{% endblock %}

@@ -1,0 +1,54 @@
+[tool.poetry]
+name = "app-pdf"
+version = "0.12.0"
+description = ""
+authors = ["Alex Girlea"]
+
+[tool.poetry.dependencies]
+python = "~3.10"
+uvicorn = "~0.22"
+fastapi = "~0.110"
+pydantic = "~2.9.1"
+pdf2image = "~1.17"
+python-multipart = "~0.0"
+python-docx = "~1.1"
+pdfplumber = "~0.11"
+pytesseract = "~0.3"
+pypdf = "~4.2"
+cryptography = "~42.0"
+pillow = "~10.0"
+reportlab = "~4.2"
+cairosvg = "~2.7"
+camelot-py = "~0.11.0"
+opencv-python =  "~4.10.0.82"
+ghostscript = "~0.7"
+aiofiles = "~23.2.1"
+natsort = "~8.4.0"
+img2pdf = "~0.5.1"
+google-cloud-secret-manager = "~2.20.2"
+
+#logging
+rich = "~13.9.4"
+
+# this if for opentelemetry
+opentelemetry-api = "~1.24.0"
+opentelemetry-exporter-gcp-monitoring = "~1.6.0a0"
+opentelemetry-exporter-gcp-trace = "~1.6.0"
+opentelemetry-exporter-otlp = "~1.24.0"
+opentelemetry-exporter-otlp-proto-common = "~1.24.0"
+opentelemetry-exporter-otlp-proto-grpc = "~1.24.0"
+opentelemetry-exporter-otlp-proto-http = "~1.24.0"
+opentelemetry-instrumentation = "~0.45b0"
+opentelemetry-instrumentation-asgi = "~0.45b0"
+opentelemetry-instrumentation-fastapi = "~0.45b0"
+opentelemetry-proto = "~1.24.0"
+opentelemetry-sdk = "~1.24.0"
+opentelemetry-semantic-conventions = "~0.45b0"
+opentelemetry-util-http = "~0.45b0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "~8.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

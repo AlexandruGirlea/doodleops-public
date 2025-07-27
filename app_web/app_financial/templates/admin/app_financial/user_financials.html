@@ -1,0 +1,95 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block title %}User Financial Info{% endblock %}
+
+{% block content %}
+<br>
+<br>
+
+<p><strong>Remaining Credits Bought:</strong> {{ remaining_credits_bought }} Credits</p>
+<p><strong>Remaining Monthly Subscription Credits:</strong> {{ remaining_monthly_subscription_credits }} Credits</p>
+<br>
+<p><strong>Total Credits:</strong> {{ total_credits }} Credits</p>
+<br>
+<br>
+{% if remaining_credits_bought_details %}
+    <h2>Detailed Credits Breakdown</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Credits Bought</th>
+                <th>Credits Remaining</th>
+                <th>Created</th>
+                <th>Expires</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for k, v in remaining_credits_bought_details.items %}
+            <tr>
+                <td>{{ k }}</td>
+                <td>{{ v.credits_bought }}</td>
+                <td>{{ v.credits_remaining }}</td>
+                <td>{{ v.created }}</td>
+                <td>{{ v.expires }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endif %}
+
+{% if stripe_subs_items %}
+    <h2>Stripe Subscription Items</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Created</th>
+                <th>Pricing Plan</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Cancel at Period End</th>
+                <th>Is Active</th>
+                <th>Is Past Due</th>
+                <th>Is Deleted</th>
+                <th>Event ID</th>
+                <th>Cost for Metered Subscription</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for stripe_subs_item in stripe_subs_items %}
+            <tr>
+                <td>{{ stripe_subs_item.subscription_id }}</td>
+                <td>{{ stripe_subs_item.created }}</td>
+                <td>{{ stripe_subs_item.pricing_plan }}</td>
+                <td>{{ stripe_subs_item.start_date }}</td>
+                <td>{{ stripe_subs_item.end_date }}</td>
+                <td>{{ stripe_subs_item.cancel_at_period_end }}</td>
+                <td>{{ stripe_subs_item.is_active }}</td>
+                <td>{{ stripe_subs_item.is_past_due }}</td>
+                <td>{{ stripe_subs_item.is_deleted }}</td>
+                <td>{{ stripe_subs_item.event_id }}</td>
+                <td>{{ stripe_subs_item.cost_for_metered_subscription }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endif %}
+<br>
+<br>
+<div class="submit-row" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+  {% if admin_url_name_list %}
+    <a href="{{ admin_url_name_list }}" class="button" style="padding: 10px; background-color: gray;">Close</a>
+  {% endif %}
+  {% if user_change_url %}
+    <a href="{{ user_change_url }}" class="button" style="padding: 10px;">Go to user page</a>
+  {% endif %}
+</div>
+<br>
+<br>
+<div class="submit-row">
+
+</div>
+
+{% endblock %}

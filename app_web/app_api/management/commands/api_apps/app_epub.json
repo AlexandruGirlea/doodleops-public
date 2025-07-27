@@ -1,0 +1,19 @@
+{
+  "ePub": {
+        "display_order": 5,
+        "description": "Process ePUB files",
+        "url_path": "epub",
+        "apis": [
+          {
+                "html_template_path": "app_epub/v1/view_epub_convert.html",
+                "display_name": "Convert to and from ePUB",
+                "display_order": 0,
+                "description": "You can convert an ePUB file to PDF or Word (DOCX) format, or vice versa. Limits: 10MB.",
+                "url_path": "epub/v1/epub-convert/",
+                "method": "POST",
+                "cost": 20,
+                "svg_icon_name": "epub.svg"
+            }
+        ]
+    }
+}

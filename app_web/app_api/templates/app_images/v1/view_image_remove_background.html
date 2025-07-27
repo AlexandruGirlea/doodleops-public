@@ -1,0 +1,100 @@
+{% extends "base_api_apps_view.html" %}
+{% load static %}
+
+{% block html_form_logic %}
+  <p class="text-center text-muted">
+    📌 This section is not open-source — it's based on a purchased theme whose HTML markup remains proprietary and cannot be shared under open-source terms.
+  </p>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    let divResponse = document.getElementById('div-response');
+    let spinner = document.getElementById('spinner');
+    let divError = document.getElementById('div-error');
+    let errorMessage = document.getElementById('error-message');
+
+    document.getElementById('image-form').addEventListener('submit', function (e) {
+        e.preventDefault();
+        divError.style.display = 'none'; // Hide error message for new requests
+        divResponse.style.display = 'none'; // Hide previous responses
+
+        const fileInput = document.getElementById('file');
+
+        if (fileInput.files.length === 0) {
+            alert('Please select an image file to process.');
+            return;
+        }
+
+        // Client-side file size and type validation
+        if (fileInput.files.length > 0) {
+            const file = fileInput.files[0];
+
+            // Replace with your max file size limit in MB
+            const maxFileSizeMb = 10; // Or set the appropriate value
+
+            if (file.size > maxFileSizeMb * 1024 * 1024) {
+                alert('The uploaded file must not exceed ' + maxFileSizeMb + ' MB.');
+                return;
+            }
+
+            // Check file type
+            const allowedFileTypes = ['image/png', 'image/jpeg'];
+            if (!allowedFileTypes.includes(file.type)) {
+                alert('Only JPEG and PNG files are allowed.');
+                return;
+            }
+        }
+
+        spinner.style.display = 'block';
+
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+
+        // Construct URL without query parameters
+        let url = new URL('{{ fast_api_path_full_path }}');
+
+        fetch(url.toString(), {
+            method: 'POST',
+            headers: {
+                "Authorization": "Bearer {{ token }}"
+            },
+            body: formData
+        })
+        .then(response => {
+            if (response.status === 200) {
+                return response.blob().then(blob => {
+                    const url = URL.createObjectURL(blob);
+
+                    divResponse.innerHTML = `
+                        <div class="mb-3">
+                            <label for="processed-image" class="form-label">Processed Image:</label>
+                            <img id="processed-image" src="${url}" class="img-fluid" alt="Processed Image">
+                        </div>
+                        <a href="${url}" download="processed_image.png" class="btn btn-primary">
+                            <i class="bi bi-download"></i> Download Image
+                        </a>
+                    `;
+
+                    spinner.style.display = 'none';
+                    divResponse.style.display = 'block';
+                });
+            } else {
+                return response.json().then(data => {
+                    errorMessage.textContent = data.detail || "An unknown error occurred.";
+                    spinner.style.display = 'none';
+                    divError.style.display = 'block';
+                });
+            }
+        })
+        .catch(error => {
+            errorMessage.textContent = "Please try again later.";
+            spinner.style.display = 'none';
+            divError.style.display = 'block';
+            console.error('Fetch error:', error);
+        });
+    });
+});
+</script>
+{% endblock %}

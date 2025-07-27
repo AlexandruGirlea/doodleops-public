@@ -1,0 +1,232 @@
+{
+  "Manage PDFs": {
+    "display_order": 1,
+    "description": "Manage PDFs",
+    "url_path": "pdf",
+    "apis": [
+      {
+        "html_template_path": "app_pdf/v1/view_pdf_convert_to_image.html",
+        "display_name": "Convert PDF to Images",
+        "display_order": 1,
+        "description": "Convert a PDF file to one or more images. Limits: 20 MB or 100 pages.",
+        "url_path": "pdf/v1/convert-to-image",
+        "method": "POST",
+        "cost": 20,
+        "svg_icon_name": "app_pdf.svg",
+        "other_info": {
+          "file_size_mb": 20
+        }
+      },
+      {
+        "html_template_path": "app_pdf/v1/view_pdf_convert_to_word_pro.html",
+        "display_name": "Convert PDF to Word",
+        "display_order": 2,
+        "description": "Convert a PDF file to a Word (.DOCX) document. Limits: 20 MB.",
+        "url_path": "pdf/v1/convert-to-word-pro",
+        "method": "POST",
+        "cost": 20,
+        "svg_icon_name": "app_pdf.svg",
+        "other_info": {
+          "file_size_mb": 20
+        }
+      },
+      {
+        "html_template_path": "app_pdf/v1/view_pdf_delete_pages.html",
+        "display_name": "Delete Pages from PDF",
+        "display_order": 3,
+        "description": "Remove specific pages from a PDF document. Limits: 30 MB.",
+        "url_path": "pdf/v1/delete-pages",
+        "method": "POST",
+        "cost": 6,
+        "svg_icon_name": "app_pdf.svg",
+        "other_info": {
+          "file_size_mb": 30
+        }
+      },
+      {
+        "html_template_path": "app_pdf/v1/view_pdf_extract_images.html",
+        "display_name": "Extract Images from PDF",
+        "display_order": 4,
+        "description": "Extract all images embedded in a PDF file. Limits: 30 MB. Note: This API does not extract images from scanned PDFs.",
+        "url_path": "pdf/v1/extract-images",
+        "method": "POST",
+        "cost": 6,
+        "svg_icon_name": "app_pdf.svg",
+        "other_info": {
+          "file_size_mb": 30
+        }
+      },
+      {
+        "html_template_path": "app_pdf/v1/view_pdf_extract_tables.html",
+        "display_name": "Extract Tables from PDF",
+        "display_order": 5,
+        "description": "Extract tables from a PDF document into a structured format. Limits: 30 MB.",
+        "url_path": "pdf/v1/extract-tables",
+        "method": "POST",
+        "cost": 10,
+        "active": false,
+        "svg_icon_name": "app_pdf.svg",
+        "other_info": {
+          "file_size_mb": 30
+        }
+      },
+      {
+        "html_template_path": "app_pdf/v1/view_pdf_insert_pdf.html",
+        "display_name": "Insert PDF into Another PDF",
+        "display_order": 6,
+        "description": "Insert one PDF into another PDF document (combine PDFs). Limits: 30 MB each.",
+        "url_path": "pdf/v1/insert-pdf",
+        "method": "POST",
+        "cost": 10,
+        "svg_icon_name": "app_pdf.svg",
+        "other_info": {
+          "file_size_mb": 30
+        }
+      },
+      {
+        "html_template_path": "app_pdf/v1/view_pdf_merge_images.html",
+        "display_name": "Merge Images into PDF",
+        "display_order": 7,
+        "description": "Combine multiple images into a single PDF document. Limits: 20 images, 30 MB total.",
+        "url_path": "pdf/v1/merge-images",
+        "method": "POST",
+        "cost": 10,
+        "svg_icon_name": "app_pdf.svg",
+        "other_info": {
+          "max_no_of_files": 20,
+          "max_files_size_mb": 30
+        }
+      },
+      {
+        "html_template_path": "app_pdf/v1/view_pdf_merge_pdfs.html",
+        "display_name": "Merge PDFs",
+        "display_order": 8,
+        "description": "Combine multiple PDF files into a single PDF document. Limits: 20 PDFs, 30 MB total.",
+        "url_path": "pdf/v1/merge-pdfs",
+        "method": "POST",
+        "cost": 10,
+        "svg_icon_name": "app_pdf.svg",
+        "other_info": {
+          "max_no_of_files": 20,
+          "max_files_size_mb": 30
+        }
+      },
+      {
+        "html_template_path": "app_pdf/v1/view_pdf_page_order.html",
+        "display_name": "Reorder PDF Pages",
+        "display_order": 9,
+        "description": "Change the order of pages within a PDF document. Limits: 30 MB.",
+        "url_path": "pdf/v1/page-order",
+        "method": "POST",
+        "cost": 10,
+        "svg_icon_name": "app_pdf.svg",
+        "other_info": {
+          "file_size_mb": 30,
+          "max_chars": 1000,
+          "min_chars": 1
+        }
+      },
+      {
+        "html_template_path": "app_pdf/v1/view_pdf_password_management_add.html",
+        "display_name": "Add Password to PDF",
+        "display_order": 10,
+        "description": "Protect a PDF file by adding a password. Limits: 30 MB",
+        "url_path": "pdf/v1/add-password",
+        "method": "POST",
+        "cost": 10,
+        "svg_icon_name": "app_pdf.svg",
+        "other_info": {
+          "file_size_mb": 30,
+          "min_chars": 1,
+          "max_chars": 50
+        }
+      },
+      {
+        "html_template_path": "app_pdf/v1/view_pdf_password_management_change.html",
+        "display_name": "Change PDF Password",
+        "display_order": 11,
+        "description": "Change the password of a protected PDF file. Limits: 30 MB",
+        "url_path": "pdf/v1/change-password",
+        "method": "POST",
+        "cost": 10,
+        "svg_icon_name": "app_pdf.svg",
+        "other_info": {
+          "file_size_mb": 30,
+          "min_chars": 1,
+          "max_chars": 50
+        }
+      },
+      {
+        "html_template_path": "app_pdf/v1/view_pdf_password_management_remove.html",
+        "display_name": "Remove Password from PDF",
+        "display_order": 12,
+        "description": "Remove the password protection from a PDF file. Limits: 30 MB",
+        "url_path": "pdf/v1/remove-password",
+        "method": "POST",
+        "cost": 10,
+        "svg_icon_name": "app_pdf.svg",
+        "other_info": {
+          "file_size_mb": 30,
+          "min_chars": 1,
+          "max_chars": 50
+        }
+      },
+      {
+        "html_template_path": "app_pdf/v1/view_pdf_rotate.html",
+        "display_name": "Rotate PDF Pages",
+        "display_order": 13,
+        "description": "Rotate pages within a PDF document to the desired orientation. Limits: 30 MB",
+        "url_path": "pdf/v1/rotate",
+        "method": "POST",
+        "cost": 10,
+        "svg_icon_name": "app_pdf.svg",
+        "other_info": {
+          "file_size_mb": 30,
+          "max_chars": 500,
+          "min_chars": 1
+        }
+      },
+      {
+        "html_template_path": "app_pdf/v1/view_pdf_split.html",
+        "display_name": "Split PDF",
+        "display_order": 14,
+        "description": "Split a PDF into multiple smaller PDF files. Download a ZIP file containing the split PDFs. Limits: 30 MB, 200 pages.",
+        "url_path": "pdf/v1/split",
+        "method": "POST",
+        "cost": 10,
+        "svg_icon_name": "app_pdf.svg",
+        "other_info": {
+          "file_size_mb": 30
+        }
+      },
+      {
+        "html_template_path": "app_pdf/v1/view_pdf_watermark_image.html",
+        "display_name": "Add Image Watermark to PDF",
+        "display_order": 15,
+        "description": "Insert an image as a watermark into a PDF document. Limits: 30 MB PDF, 1 MB image.",
+        "url_path": "pdf/v1/watermark-image",
+        "method": "POST",
+        "cost": 10,
+        "svg_icon_name": "app_pdf.svg",
+        "other_info": {
+          "pdf_file_size_mb": 30,
+          "img_file_size_mb": 1
+        }
+      },
+      {
+        "html_template_path": "app_pdf/v1/view_pdf_watermark_text.html",
+        "display_name": "Add Text Watermark to PDF",
+        "display_order": 16,
+        "description": "Insert text as a watermark into a PDF document. Limits: 30 MB PDF, 25 characters of text.",
+        "url_path": "pdf/v1/watermark-text",
+        "method": "POST",
+        "cost": 10,
+        "svg_icon_name": "app_pdf.svg",
+        "other_info": {
+          "pdf_file_size_mb": 30,
+          "text_max_length": 25
+        }
+      }
+    ]
+  }
+}

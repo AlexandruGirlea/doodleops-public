@@ -1,0 +1,23 @@
+{
+  "AI": {
+    "display_order": 0,
+    "description": "AI powered services",
+    "url_path": "ai",
+    "apis": [
+      {
+        "html_template_path": "app_ai/v1/view_ai_whatsapp.html",
+        "display_name": "Chat with AI over WhatsApp in Any Language",
+        "display_order": 1,
+        "description": "You can now access the latest AI powered services over WhatsApp. Just push the button below or scan the QR code to start chatting with our AI.",
+        "url_path": "ai/v1/whatsapp-ai/",
+        "method": "POST",
+        "cost": null,
+        "svg_icon_name": "app_ai.svg",
+        "other_info": {
+          "qr_code_img": "assets/app-api/ai/v1/qr_code_whatsapp_ai.png",
+          "whatsapp_link": "https://wa.me/+1234567890"
+        }
+      }
+    ]
+  }
+}

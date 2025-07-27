@@ -1,0 +1,60 @@
+{% extends 'base_email.html' %}
+
+{% block title %}Important Updates to Our Terms of Service and Privacy Policy{% endblock %}
+
+{% block header %}
+    {% if inline_logo %}
+        <img src="cid:logo.png" alt="Company Logo" width="100" style="display:block; margin:auto;">
+    {% else %}
+        <h2 style="text-align:center; color:#2C62FF; margin:0; font-family: Arial, sans-serif;">DoodleOps</h2>
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+    <div class="content" style="max-width:600px; margin:0 auto; background-color:#ffffff; padding:30px; border-radius:8px; box-shadow:0 0 10px rgba(0,0,0,0.1); font-family: Arial, sans-serif; color:#333333;">
+        <h3 style="font-size:24px; color:#333333; margin-top:0;">We've Updated Our Terms of Service and Privacy Policy</h3>
+
+        <p style="font-size:16px; line-height:1.6;">
+            Hello {{ email }},
+        </p>
+
+        <p style="font-size:16px; line-height:1.6;">
+            We have recently updated our <b>Terms of Service</b> and <b>Privacy Policy</b> to better serve you and enhance our services. These changes reflect our commitment to providing a transparent and secure experience for all our users.
+        </p>
+
+        <p style="font-size:16px; line-height:1.6;">
+            Please take a moment to review the updated documents by clicking the buttons below:
+        </p>
+
+        <div style="text-align:center;">
+            <a href="{{ domain_path }}/terms/" class="try-button" style="font-weight:400; border-width:1px; border-style:solid; box-sizing:border-box; display:inline-block; text-decoration:none; text-align:center; padding:9px 16px; background:#2C62FF; border-color:#2C62FF; color:#FFFFFF; border-radius:99em; font-size:14px; line-height:20px; margin:10px;" target="_blank">View Terms of Service</a>
+
+            <a href="{{ domain_path }}/privacy/" class="try-button" style="font-weight:400; border-width:1px; border-style:solid; box-sizing:border-box; display:inline-block; text-decoration:none; text-align:center; padding:9px 16px; background:#2C62FF; border-color:#2C62FF; color:#FFFFFF; border-radius:99em; font-size:14px; line-height:20px; margin:10px;" target="_blank">View Privacy Policy</a>
+        </div>
+
+        <p style="font-size:16px; line-height:1.6;">
+            If you have any questions or concerns about these updates, feel free to <b>reply</b> to this email or <a href="{{ domain_path }}/contact" style="color:#2C62FF; text-decoration:none;">contact our support team</a>.
+        </p>
+
+        <p style="font-size:16px; line-height:1.6;">
+            Thank you for being a valued member of the DoodleOps community!
+        </p>
+
+        <p style="font-size:16px; line-height:1.6;">
+            Best regards,<br>
+            Alex G.<br>
+            CEO, DoodleOps
+        </p>
+    </div>
+{% endblock %}
+
+{% block footer %}
+    <div class="footer" style="text-align:center; margin-top:30px; font-size:12px; color:#888888; font-family: Arial, sans-serif;">
+        <p>
+            © {{ current_year }} DoodleOps.com. All rights reserved.<br>
+            <a href="{{ domain_path }}/terms/" style="color:#888888; text-decoration:none;">Terms &amp; Conditions</a> |
+            <a href="{{ domain_path }}/privacy/" style="color:#888888; text-decoration:none;">Privacy Policy</a> |
+            <a href="{{ domain_path }}/contact" style="color:#888888; text-decoration:none;">Contact Us</a>
+        </p>
+    </div>
+{% endblock %}

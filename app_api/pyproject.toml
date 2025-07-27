@@ -1,0 +1,92 @@
+[tool.poetry]
+name = "APP API"
+version = "1.68.0"
+description = ""
+authors = ["Alex Girlea"]
+
+[tool.poetry.dependencies]
+python = "~3.10"
+
+uvicorn = "~0.34.0"
+fastapi = "~0.115.8"
+pydantic = "~2.9.1"
+requests = "~2.29"
+python-multipart = "~0.0.9"
+httpx = "~0.24.1"
+PyJWT = "~2.8.0"
+markdown = "~3.6"
+Pillow = "~10.0.0"
+mysqlclient = "~2.2.0"
+databases = {version = "~0.7.0", extras = ["mysql"]}
+redis = "~5.0.0"
+cryptography = "~42.0.4"
+
+# ai
+openai = "~1.61.0"
+
+# gcp
+google-auth = "~2.37.0"
+google-cloud-secret-manager = "~2.22.1"
+google-api-python-client = "~2.129.0"
+google-cloud-storage = "~2.19.0"
+google-cloud-pubsub = "~2.28.0"
+
+# to validate the request
+twilio = '~9.4.4'
+
+# this is for running GCF locally
+functions-framework = "~3.4.0"
+
+# this is for git hooks
+pre-commit = "~3.3.3"
+black = "~23.7.0"
+
+#logging
+rich = "~13.9.4"
+
+# this if for opentelemetry
+opentelemetry-api = "~1.29.0"
+opentelemetry-exporter-gcp-monitoring = "~1.8.0a0"
+opentelemetry-exporter-gcp-trace ="~1.8.0"
+opentelemetry-exporter-otlp = "~1.29.0"
+opentelemetry-exporter-otlp-proto-common = "~1.29.0"
+opentelemetry-exporter-otlp-proto-grpc = "~1.29.0"
+opentelemetry-exporter-otlp-proto-http = "~1.29.0"
+opentelemetry-instrumentation = "~0.50b0"
+opentelemetry-instrumentation-asgi = "~0.50b0"
+opentelemetry-instrumentation-fastapi = "~0.50b0"
+opentelemetry-proto = "~1.29.0"
+opentelemetry-sdk = "~1.29.0"
+opentelemetry-semantic-conventions = "~0.50b0"
+opentelemetry-util-http = "~0.50b0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "~8.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+# Specify directories where pytest should look for tests
+testpaths = [
+    "tests"
+]
+
+# Define patterns for test file discovery
+python_files = [
+    "test_*.py",
+    "*_test.py"
+]
+
+# Define naming patterns for test classes and functions
+python_classes = "Test*"
+python_functions = "test_*"
+
+filterwarnings = [
+    "ignore::DeprecationWarning",
+]
+
+[tool.black]  # If you're using Black for code formatting
+line-length = 82
+target-version = ['py310']

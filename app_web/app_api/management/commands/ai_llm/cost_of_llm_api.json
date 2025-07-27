@@ -1,0 +1,102 @@
+{
+  "simple_conversation": {
+    "redis_key_name": "simple_conversation",
+    "display_name": "AI conversation",
+    "description": "Each standard conversation is billed at 3 credits.",
+    "display_order": 1,
+    "is_active": true,
+    "cost": 3,
+    "svg_icon_name": "llm_api.svg",
+    "other_info": {}
+  },
+  "web_research": {
+    "redis_key_name": "web_research",
+    "display_name": "Web research",
+    "description": "If the AI determines that web research is necessary during a conversation, an additional 2 credits will be added to the basic conversation fee.",
+    "display_order": 2,
+    "is_active": true,
+    "cost": 2,
+    "svg_icon_name": "llm_api.svg",
+    "other_info": {}
+  },
+  "web_search": {
+    "redis_key_name": "web_search",
+    "display_name": "Web search",
+    "description": "If the AI performs a web search as part of the conversation, an additional 1 credit will be added to the basic conversation fee.",
+    "display_order": 3,
+    "is_active": true,
+    "cost": 1,
+    "svg_icon_name": "llm_api.svg",
+    "other_info": {}
+  },
+  "document_input_processing": {
+    "redis_key_name": "document_input_processing",
+    "display_name": "Document Input Processing",
+    "description": "If the AI processes a document as part of the conversation, an additional 2 credits will be added to the basic conversation fee. For now we can only process PDF files Max 5MB and Max 10 pages long.",
+    "display_order": 4,
+    "is_active": true,
+    "cost": 2,
+    "svg_icon_name": "llm_api.svg",
+    "other_info": {}
+  },
+  "image_generation": {
+    "redis_key_name": "image_generation",
+    "display_name": "Generate Image",
+    "description": "If the AI performs image generation as part of the conversation, an additional 5 credits will be added to the basic conversation fee.",
+    "display_order": 5,
+    "is_active": true,
+    "cost": 5,
+    "svg_icon_name": "llm_api.svg",
+    "other_info": {}
+  },
+  "image_input_processing": {
+    "redis_key_name": "image_input_processing",
+    "display_name": "Process Image provided by user",
+    "description": "If the AI needs to process an image provided by the user as part of the conversation, an additional 2 credits will be added to the basic conversation fee.",
+    "display_order": 6,
+    "is_active": true,
+    "cost": 2,
+    "svg_icon_name": "llm_api.svg",
+    "other_info": {}
+  },
+  "respond_with_sound": {
+    "redis_key_name": "respond_with_sound",
+    "display_name": "Respond with sound recording",
+    "description": "If the AI responds with a sound recording, an additional 2 credits will be added to the basic conversation fee.",
+    "display_order": 7,
+    "is_active": true,
+    "cost": 2,
+    "svg_icon_name": "llm_api.svg",
+    "other_info": {}
+  },
+  "sound_input_processing": {
+    "redis_key_name": "sound_input_processing",
+    "display_name": "Process Sound provided by user",
+    "description": "If the AI needs to process a sound provided by the user as part of the conversation, an additional 2 credits per sound length minute will be added to the basic conversation fee. For now we can only process WhatsApp voice recordings/notes.",
+    "display_order": 8,
+    "is_active": true,
+    "cost": 2,
+    "svg_icon_name": "llm_api.svg",
+    "other_info": {}
+  },
+  "text_to_text_translation": {
+    "redis_key_name": "text_to_text_translation",
+    "display_name": "Text to Text Translation",
+    "description": "If the AI needs to translate text as part of the conversation, an additional 1 credit will be added to the basic conversation fee.",
+    "display_order": 9,
+    "is_active": true,
+    "cost": 1,
+    "svg_icon_name": "llm_api.svg",
+    "other_info": {}
+  },
+  "generate_video": {
+    "redis_key_name": "generate_video",
+    "display_name": "Generate Video",
+    "description": "If the AI needs to generate a video as part of the conversation, an additional 300 credits will be added to the basic conversation fee.",
+    "display_order": 9,
+    "is_active": true,
+    "cost": 300,
+    "svg_icon_name": "llm_api.svg",
+    "other_info": {}
+  }
+}

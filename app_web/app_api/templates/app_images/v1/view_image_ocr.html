@@ -1,0 +1,178 @@
+{% extends "base_api_apps_view.html" %}
+{% load static %}
+
+{% block html_form_logic %}
+  <p class="text-center text-muted">
+    📌 This section is not open-source — it's based on a purchased theme whose HTML markup remains proprietary and cannot be shared under open-source terms.
+  </p>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    let divResponse = document.getElementById('div-response');
+    let spinner = document.getElementById('spinner');
+    let divError = document.getElementById('div-error');
+    let errorMessage = document.getElementById('error-message');
+
+    const languageSelect = document.getElementById('language');
+
+    // Function to fetch languages and populate the select dropdown
+    function loadLanguages() {
+        fetch('{{ fast_api_path_full_path }}', {
+            method: 'GET',
+            headers: {
+                "Authorization": "Bearer {{ token }}"
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                return response.json().then(data => {
+                    // Clear existing options
+                    languageSelect.innerHTML = '<option value="eng" disabled selected>English</option>';
+
+                    // Populate the select element with options
+                    data.forEach(item => {
+                        const option = document.createElement('option');
+                        option.value = item[0]; // Language code
+                        option.textContent = item[1]; // Language name
+                        languageSelect.appendChild(option);
+                    });
+                });
+            } else {
+                languageSelect.innerHTML = '<option value="" disabled selected>Error loading languages</option>';
+                console.error('Failed to load languages');
+            }
+        })
+        .catch(error => {
+            languageSelect.innerHTML = '<option value="" disabled selected>Error loading languages</option>';
+            console.error('Error fetching languages:', error);
+        });
+    }
+
+    // Load languages when the page loads
+    languageSelect.addEventListener('click', () => {
+        // Check if options have already been loaded
+        if (languageSelect.options.length <= 1) { // Assumes only the placeholder exists initially
+            loadLanguages();
+        }
+    });
+
+    document.getElementById('image-form').addEventListener('submit', function (e) {
+        e.preventDefault();
+        divError.style.display = 'none'; // Hide error message for new requests
+        divResponse.style.display = 'none'; // Hide previous responses
+
+        const fileInput = document.getElementById('file');
+        const language = languageSelect.value;
+
+        if (fileInput.files.length === 0) {
+            alert('Please select an image file to process.');
+            return;
+        }
+
+        if (!language) {
+            alert('Please select a language.');
+            return;
+        }
+
+        // Client-side file size validation
+        if (fileInput.files.length > 0) {
+            const file = fileInput.files[0];
+
+            // Replace with your max file size limit in MB
+            const maxFileSizeMb = 10; // Or set the appropriate value
+
+            if (file.size > maxFileSizeMb * 1024 * 1024) {
+                alert('The uploaded file must not exceed ' + maxFileSizeMb + ' MB.');
+                return;
+            }
+
+            // Check file type
+            const allowedFileTypes = ['image/png', 'image/jpeg', 'image/bmp', 'image/tiff'];
+            if (!allowedFileTypes.includes(file.type)) {
+                alert('Only JPEG, PNG, BMP, and TIFF files are allowed.');
+                return;
+            }
+        }
+
+        spinner.style.display = 'block';
+
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+
+        // Construct URL with query parameters
+        let url = new URL('{{ fast_api_path_full_path }}');
+        url.searchParams.append('language', language);
+
+        fetch(url.toString(), {
+            method: 'POST',
+            headers: {
+                "Authorization": "Bearer {{ token }}"
+            },
+            body: formData
+        })
+        .then(response => {
+            if (response.status === 200) {
+                return response.json().then(data => {
+                    const text = data.text;
+
+                    // Display the text in a textarea with a copy button
+                    divResponse.innerHTML = `
+                        <div class="mb-3">
+                            <label for="ocr-result" class="form-label">Extracted Text:</label>
+                            <textarea id="ocr-result" class="form-control" rows="10" readonly>${text}</textarea>
+                        </div>
+                        <button id="copy-button" class="btn btn-primary">
+                            <i class="bi bi-clipboard"></i> Copy Text
+                        </button>
+                    `;
+
+                    // Add event listener for copy button
+                    document.getElementById('copy-button').addEventListener('click', function () {
+                        const ocrResult = document.getElementById('ocr-result');
+                        ocrResult.select();
+                        ocrResult.setSelectionRange(0, 99999); // For mobile devices
+
+                        if (navigator.clipboard && navigator.clipboard.writeText) {
+                            navigator.clipboard.writeText(ocrResult.value).then(function () {
+                                alert('Text copied to clipboard');
+                            }, function () {
+                                alert('Failed to copy text');
+                            });
+                        } else {
+                            // Fallback method using execCommand
+                            try {
+                                const successful = document.execCommand('copy');
+                                if (successful) {
+                                    alert('Text copied to clipboard');
+                                } else {
+                                    alert('Failed to copy text');
+                                }
+                            } catch (err) {
+                                alert('Failed to copy text');
+                            }
+                        }
+                    });
+
+                    spinner.style.display = 'none';
+                    divResponse.style.display = 'block';
+                });
+            } else {
+                return response.json().then(data => {
+                    errorMessage.textContent = data.detail || "An unknown error occurred.";
+                    spinner.style.display = 'none';
+                    divError.style.display = 'block';
+                });
+            }
+        })
+        .catch(error => {
+            errorMessage.textContent = "Please try again later.";
+            spinner.style.display = 'none';
+            divError.style.display = 'block';
+            console.error('Fetch error:', error);
+        });
+    });
+});
+</script>
+{% endblock %}

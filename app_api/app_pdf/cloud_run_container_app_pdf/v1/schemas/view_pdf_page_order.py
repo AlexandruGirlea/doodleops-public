@@ -1,0 +1,1 @@
+MAX_CHAR_REGEX = r'^.{1,1000}$'

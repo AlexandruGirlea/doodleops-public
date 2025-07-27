@@ -1,0 +1,16 @@
+{% load static %}
+
+<html lang="en">
+<head>
+    <title>Error 404 | DoodleOps</title>
+</head>
+
+<main>
+    <div>
+          <p>Error 500: Internal Server Error!</p>
+        <p>Something went wrong on our end. If this seems like an error, please <a class="link" href="{% url 'contact' %}">let us know</a>.</p>
+        <a href="{% url 'index' %}">Go back to Home</a>
+    </div>
+</main>
+</html>
+

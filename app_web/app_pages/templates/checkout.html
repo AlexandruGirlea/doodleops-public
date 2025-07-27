@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stripe Checkout</title>
+    <script src="https://js.stripe.com/v3/"></script>
+</head>
+<body>
+    <button onclick="createCheckoutSession(1)">Buy $1</button>
+    <button onclick="createCheckoutSession(10)">Buy $10</button>
+    <button onclick="createCheckoutSession(100)">Buy $100</button>
+
+    <script>
+        const stripe = Stripe('{{ stripe_key }}');
+
+        function createCheckoutSession(price) {
+            fetch(`/create-checkout-session/?price=${price}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert(data.error);
+                    } else {
+                        stripe.redirectToCheckout({
+                            sessionId: data.session_id
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('There was an error:', error);
+                });
+        }
+    </script>
+</body>
+</html>

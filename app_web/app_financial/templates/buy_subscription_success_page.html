@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block main %}
+  <p class="text-center text-muted">
+    📌 This section is not open-source — it's based on a purchased theme whose HTML markup remains proprietary and cannot be shared under open-source terms.
+  </p>
+<div>
+      <div>
+        <div>
+          <div>
+            <img>
+          </div>
+          <h1 class="h2">Thank you for your purchase !</h1>
+        </div>
+      </div>
+    </div>
+
+<script>
+    // JavaScript to redirect after 5 seconds
+    function redirect() {
+        setTimeout(function() {
+            window.location.href = "{% url 'profile_general' %}";
+        }, 3000); // 3000 milliseconds = 3 seconds
+    }
+
+    // Call the redirect function immediately
+    redirect();
+</script>
+{% endblock %}

@@ -1,0 +1,157 @@
+{% extends 'base_email.html' %}
+
+{% block title %}Welcome to DoodleOps!{% endblock %}
+
+{% block header %}
+    <style>
+        /* Global styles can remain here, but critical styles should be inline */
+    </style>
+
+    {% if inline_logo %}
+        <img src="cid:logo.png" alt="Company Logo" width="100" style="display:block; margin:auto;">
+    {% else %}
+        <h2 style="text-align:center; color:#2C62FF; margin:0; font-family: Arial, sans-serif;">DoodleOps</h2>
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+    <div class="content" style="max-width:600px; margin:0 auto; background-color:#ffffff; padding:30px; border-radius:8px; box-shadow:0 0 10px rgba(0,0,0,0.1); font-family: Arial, sans-serif; color:#333333;">
+        <h3 style="font-size:24px; color:#333333; margin-top:0;">Hi {{ email }}!</h3>
+
+        <p style="font-size:16px; line-height:1.6;">
+            I'm Alex, CEO at DoodleOps. Welcome and thank you for joining our community of
+            innovators who are dedicated to automating the boring stuff so you can focus on what truly matters.
+        </p>
+
+        {% if credits %}
+            <div class="credits" style="background-color:#f9f9f9; padding:15px; border-left:4px solid #2C62FF; margin:20px 0; border-radius:4px;">
+                <p style="font-size:16px; line-height:1.6;">
+                    To help you get started, we've credited your account with <strong>{{ credits }}</strong> free credits.
+                    Use them to explore our services and experience the ease of automation firsthand!
+                </p>
+            </div>
+        {% endif %}
+
+        <p style="font-size:16px; line-height:1.6;">
+            We've prepared a comprehensive guide below to help you make the most out of your new DoodleOps account.
+            Whether you're looking to streamline your workflows or automate repetitive tasks, we're here to support you every step of the way.
+        </p>
+
+        <p style="font-size:16px; line-height:1.6;">
+            Thank you for choosing DoodleOps. We're excited to see what you'll achieve with our tools!
+        </p>
+
+        <p style="font-size:16px; line-height:1.6;">
+            Cheers,<br>
+            Alex G.<br>
+            CEO, DoodleOps
+        </p>
+
+        <div style="border-top:8px solid #f2f2f2; padding:32px 24px;">
+            <div style="margin-bottom:16px;">
+                <h2 style="margin:0; font-weight:400; color:#080808; font-size:28px; line-height:32px; text-align:center;">What you can do with DoodleOps</h2>
+            </div>
+            <div style="margin-bottom:16px;">
+                <div style="font-size:16px; line-height:24px; color:#292929;">
+                    <div style="margin-bottom:24px;">
+                        <p>This guide walks you through everything you need to get the best out of your DoodleOps account. A few highlights:</p>
+                    </div>
+                    <div style="margin-bottom:24px;">
+                        <ul style="margin:0; padding:0; list-style:none;">
+                            <li style="margin-left:0; padding-bottom:6px;">
+                                <table cellspacing="0" cellpadding="0" style="border-spacing:0;">
+                                    <tbody>
+                                        <tr>
+                                            <td style="vertical-align:top;">
+                                                <div style="margin-right:8px;">
+                                                    <img src="cid:check.png" alt="Checkmark" width="16" height="16" style="display:block;">
+                                                </div>
+                                            </td>
+                                            <td style="vertical-align:top;">
+                                                <span style="font-size:16px; line-height:24px;">Automate repetitive tasks like PDF merging and manipulation with ease.</span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </li>
+                            <li style="margin-left:0; padding-bottom:6px;">
+                                <table cellspacing="0" cellpadding="0" style="border-spacing:0;">
+                                    <tbody>
+                                        <tr>
+                                            <td style="vertical-align:top;">
+                                                <div style="margin-right:8px;">
+                                                    <img src="cid:check.png" alt="Checkmark" width="16" height="16" style="display:block;">
+                                                </div>
+                                            </td>
+                                            <td style="vertical-align:top;">
+                                                <span style="font-size:16px; line-height:24px;">Leverage cutting-edge AI technologies, including Generative AI (GenAI) and Deep Learning models, to simplify complex workflows.</span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </li>
+                            <li style="margin-left:0; padding-bottom:6px;">
+                                <table cellspacing="0" cellpadding="0" style="border-spacing:0;">
+                                    <tbody>
+                                        <tr>
+                                            <td style="vertical-align:top;">
+                                                <div style="margin-right:8px;">
+                                                    <img src="cid:check.png" alt="Checkmark" width="16" height="16" style="display:block;">
+                                                </div>
+                                            </td>
+                                            <td style="vertical-align:top;">
+                                                <span style="font-size:16px; line-height:24px;">Seamlessly integrate advanced deep learning models into your projects.</span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </li>
+                            <li style="margin-left:0; padding-bottom:6px;">
+                                <table cellspacing="0" cellpadding="0" style="border-spacing:0;">
+                                    <tbody>
+                                        <tr>
+                                            <td style="vertical-align:top;">
+                                                <div style="margin-right:8px;">
+                                                    <img src="cid:check.png" alt="Checkmark" width="16" height="16" style="display:block;">
+                                                </div>
+                                            </td>
+                                            <td style="vertical-align:top;">
+                                                <span style="font-size:16px; line-height:24px;">Request customized APIs tailored specifically to your unique business needs.</span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </li>
+                        </ul>
+                    </div>
+                    <div style="margin-bottom:24px;">
+                        <p>The best way to learn is to do, so jump right in.</p>
+                    </div>
+                </div>
+            </div>
+            <div style="text-align:center;">
+                <a href="{{ domain_path }}" class="try-button" style="font-weight:400; border-width:1px; border-style:solid; box-sizing:border-box; display:inline-block; text-decoration:none; text-align:center; padding:9px 16px; background:#191919; border-color:#191919; color:#FFFFFF; border-radius:99em; font-size:14px; line-height:20px; margin-top:20px;" target="_blank">Try it out</a>
+            </div>
+        </div>
+
+        <!-- What We Offer Section -->
+        <div style="border-top:8px solid #f2f2f2; padding:32px 24px; font-size:16px; line-height:1.6;">
+            <h2 style="text-align:center; color:#080808; font-size:24px;">Now, This is What We Offer:</h2>
+            <p>We offer a collection of simple services that automate mundane tasks, ranging from merging two PDFs to accessing the latest AI technologies like Generative AI (GenAI), Retrieval-Augmented Generation (RAG) language models, and Deep Learning models.</p>
+            <p>Our services can be accessed directly through our <a href="{{ domain_path }}" style="color:#2C62FF; text-decoration:none;">Web Interface</a> or via APIs (see our <a href="{{ api_docs_url }}" style="color:#2C62FF; text-decoration:none;">API documentation</a>), allowing seamless integration into your business or products.</p>
+            <p>We also build custom APIs on demand. Reach out and tell us what you need at <a href="{{ domain_path }}/contact" style="color:#2C62FF; text-decoration:none;">Contact Us</a>, and we'll do our best to craft the perfect solution for you.</p>
+            <p>In short, we aim to automate the mundane tasks, freeing up valuable time for you and your team to focus on more critical responsibilities.</p>
+        </div>
+    </div>
+{% endblock %}
+
+{% block footer %}
+    <div class="footer" style="text-align:center; margin-top:30px; font-size:12px; color:#888888; font-family: Arial, sans-serif;">
+        <p>
+            © {{ current_year }} DoodleOps.com. All rights reserved.<br>
+            <a href="{{ terms_of_service_url }}" style="color:#888888; text-decoration:none;">Terms &amp; Conditions</a> |
+            <a href="{{ privacy_policy_url }}" style="color:#888888; text-decoration:none;">Privacy Policy</a> |
+            <a href="{{ contact_url }}" style="color:#888888; text-decoration:none;">Contact Us</a>
+        </p>
+    </div>
+{% endblock %}

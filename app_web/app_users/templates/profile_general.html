@@ -1,0 +1,45 @@
+{% extends "base_profile.html" %}
+{% load static %}
+
+{% block profile_content %}
+  <p class="text-center text-muted">
+    📌 This section is not open-source — it's based on a purchased theme whose HTML markup remains proprietary and cannot be shared under open-source terms.
+  </p>
+</div>
+
+{% if user_metered_cost_for_current_month_url %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('fetchDataButton').addEventListener('click', function() {
+            fetch("{{ user_metered_cost_for_current_month_url }}")
+                .then(response => {
+                    if (!response.ok) {
+                        if(response.status === 429) {
+                            // If rate limit is exceeded, parse the JSON to get the error message
+                            return response.json().then(json => {
+                                throw new Error('Error: ' + json.error);
+                            });
+                        }
+                        throw new Error('An error occurred');
+                    }
+                    return response.json(); // Parse the response as JSON
+                })
+                .then(data => {
+                    // Extract the cost value and update the result container
+                    const cost = data.user_instant_cost_in_dollars_for_metered_subscription;
+                    document.getElementById('resultContainer').textContent = 'Your estimated cost for this month is: ' + '$' + cost;
+                })
+                .catch(error => {
+                    document.getElementById('resultContainer').textContent = error.message;
+                });
+        });
+    });
+</script>
+{% endif %}
+<script>
+    function confirmDelete() {
+        return confirm("Are you sure you want to delete your account? This action is irreversible.");
+    }
+</script>
+
+{% endblock %}

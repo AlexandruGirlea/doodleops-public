@@ -1,0 +1,69 @@
+{
+  "Documents": {
+        "display_order": 2,
+        "description": "Process Microsoft documents",
+        "url_path": "doc",
+        "apis": [
+          {
+                "html_template_path": "app_docs/v1/view_docs_excel_extract_each_sheet_to_new_excels.html",
+                "display_name": "Extract Excel Sheets",
+                "display_order": 0,
+                "description": "Extract each sheet from an Excel file to a new Excel file. The new files will be zipped and available for download. Limits: 2MB.",
+                "url_path": "docs/v1/excel/extract-each-sheet-to-new-excels",
+                "method": "POST",
+                "cost": 1,
+                "svg_icon_name": "excel.svg"
+            },
+          {
+                "html_template_path": "app_docs/v1/view_docs_excel_merge.html",
+                "display_name": "Merge Excel Files",
+                "display_order": 1,
+                "description": "Merge multiple Excel files into one Excel sheet. You can specify the order of the files. Limits: 10MB total.",
+                "url_path": "docs/v1/excel/merge",
+                "method": "POST",
+                "cost": 1,
+                "svg_icon_name": "excel.svg"
+            },
+          {
+                "html_template_path": "app_docs/v1/view_docs_excel_remove_empty_rows.html",
+                "display_name": "Remove Empty Rows in Excel",
+                "display_order": 2,
+                "description": "Remove rows that are completely empty in an Excel file. Limits: 2MB.",
+                "url_path": "docs/v1/excel/remove-empty-rows",
+                "method": "POST",
+                "cost": 1,
+                "svg_icon_name": "excel.svg"
+            },
+          {
+                "html_template_path": "app_docs/v1/view_docs_excel_remove_rows_based_on_condition.html",
+                "display_name": "Remove Excel Rows (Advanced)",
+                "display_order": 3,
+                "description": "Remove rows based on conditions in an Excel file. Limits: 2MB.",
+                "url_path": "docs/v1/excel/remove-rows-based-on-condition",
+                "method": "POST",
+                "cost": 3,
+                "svg_icon_name": "excel.svg"
+            },
+          {
+                "html_template_path": "app_docs/v1/view_docs_excel_split.html",
+                "display_name": "Split Excel File based on row count",
+                "display_order": 4,
+                "description": "Split an Excel file into multiple (Excel or CSV) files based on row count. Limits: 2MB, 100 files.",
+                "url_path": "docs/v1/excel/split",
+                "method": "POST",
+                "cost": 2,
+                "svg_icon_name": "excel.svg"
+            },
+            {
+                "html_template_path": "app_docs/v1/view_excel_find_and_replace.html",
+                "display_name": "Find and Replace in Excel",
+                "display_order": 5,
+                "description": "Find and replace text in an Excel file. Limits: 2MB.",
+                "url_path": "docs/v1/excel/find-and-replace",
+                "method": "POST",
+                "cost": 1,
+                "svg_icon_name": "excel.svg"
+            }
+        ]
+    }
+}

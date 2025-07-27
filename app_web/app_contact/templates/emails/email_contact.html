@@ -1,0 +1,49 @@
+{% extends 'base_email.html' %}
+
+{% block subject %}Ticket #{{ ticket_id }} was created{% endblock %}
+
+{% block header %}
+    {% if inline_logo %}
+    <img src="cid:logo.png" alt="Company Logo" width="100" style="display:block; margin:auto;">
+    {% else %}
+    <h2 style="text-align:center;">DoodleOps</h2>
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+    <p>Hi {{ email }},</p>
+
+    {% if team_name == 'Sales' %}
+        <p>Thank you for reaching out to our {{team_name}} team. Your {{team_name}} ticket <strong>#{{ ticket_id }}</strong> has been created.</p>
+        <div>
+            <a href="{{calendly_url}}" class="btn btn-success" style="min-width: 150px; width: 100%">Set up a Call</a>
+        </div>
+    {% else %}
+        <p>Thank you for reaching out to our {{team_name}} team. Your {{team_name}} ticket <strong>#{{ ticket_id }}</strong> has been created.</p>
+    {% endif %}
+
+    <p>Here is a summary of your request:</p>
+
+    <blockquote style="border-left: 4px solid #ccc; padding-left: 10px; color: #555;">
+        {{ user_message|escape|linebreaksbr }}
+    </blockquote>
+
+    <p>We will respond in {{email_contact_response_time}} business days.</p>
+
+    <p>For more details, please visit our <a href="{{domain_path}}/faq/" style="color:#1a73e8;">FAQ section</a>.</p>
+
+    <p><strong>Attention:</strong> If you did not create this ticket, please contact us at <a href="mailto:{{ support_email }}" style="color:#1a73e8;">{{ support_email }}</a> and do not click on any links.</p>
+
+
+    <p>Best regards,<br>DoodleOps {{team_name}} Team</p>
+
+{% endblock %}
+
+{% block footer %}
+    <p style="font-size:12px; color:#888888;">
+        © {{ current_year }} DoodleOps.com. All rights reserved.<br>
+        <a href="{{domain_path}}/terms/" style="color:#888888;">Terms & Conditions</a> |
+        <a href="{{domain_path}}/privacy/" style="color:#888888;">Privacy Policy</a> |
+        <a href="{{domain_path}}/contact" style="color:#888888;">Contact Us</a>
+    </p>
+{% endblock %}

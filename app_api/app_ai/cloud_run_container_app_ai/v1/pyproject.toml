@@ -1,0 +1,59 @@
+[tool.poetry]
+name = "app_ai"
+version = "0.73"
+description = ""
+authors = ["Alex Girlea"]
+
+[tool.poetry.dependencies]
+python = "~3.12"
+uvicorn = "~0.34.0"
+fastapi = "~0.115.8"
+twilio = '~9.4.4'
+openai = '~1.61.0'
+redis = "~5.2"
+
+google-cloud-secret-manager = "~2.22.1"
+google-api-python-client = "~2.163.0"
+google-cloud-texttospeech = "~2.25.0"
+google-cloud-speech = "~2.31.0"
+google-cloud-translate = "~3.20.1"
+google-cloud-vision = "~3.10"
+google-genai = "~1.5.0"
+pydub = "~0.25.1"
+pydantic = "~2.10.6"
+google-cloud-aiplatform = "~1.79.0"
+langchain = "~0.3.18rc1"
+langgraph = "~0.2.69"
+langchain_community = "~0.3.17"
+langchain_openai = "~0.3.4"
+langchain-google-vertexai = "~2.0.13"
+yfinance = "~0.2.54"
+pillow = "~11.1.0"
+pygraphviz = "~1.14"
+pypdf= "~5.3.1"
+
+#logging
+rich = "~13.9.4"
+
+# this if for opentelemetry
+opentelemetry-api = "~1.29.0"
+opentelemetry-exporter-gcp-monitoring = "~1.8.0a0"
+opentelemetry-exporter-gcp-trace ="~1.8.0"
+opentelemetry-exporter-otlp = "~1.29.0"
+opentelemetry-exporter-otlp-proto-common = "~1.29.0"
+opentelemetry-exporter-otlp-proto-grpc = "~1.29.0"
+opentelemetry-exporter-otlp-proto-http = "~1.29.0"
+opentelemetry-instrumentation = "~0.50b0"
+opentelemetry-instrumentation-asgi = "~0.50b0"
+opentelemetry-instrumentation-fastapi = "~0.50b0"
+opentelemetry-proto = "~1.29.0"
+opentelemetry-sdk = "~1.29.0"
+opentelemetry-semantic-conventions = "~0.50b0"
+opentelemetry-util-http = "~0.50b0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "~8.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

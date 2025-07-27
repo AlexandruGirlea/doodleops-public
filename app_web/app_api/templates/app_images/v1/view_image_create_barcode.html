@@ -1,0 +1,137 @@
+{% extends "base_api_apps_view.html" %}
+{% load static %}
+
+{% block html_form_logic %}
+  <p class="text-center text-muted">
+    📌 This section is not open-source — it's based on a purchased theme whose HTML markup remains proprietary and cannot be shared under open-source terms.
+  </p>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    let divResponse = document.getElementById('div-response');
+    let spinner = document.getElementById('spinner');
+    let divError = document.getElementById('div-error');
+    let errorMessage = document.getElementById('error-message');
+    let codeTypeSelect = document.getElementById('code-type');
+    let fileUrl;
+
+    // Initially hide elements
+    divResponse.style.display = 'none';
+    spinner.style.display = 'none';
+    divError.style.display = 'none';
+    codeTypeSelect.disabled = true;
+
+    // Fetch code types from API and populate the select element
+    fetch('{{ fast_api_path_full_path }}', {
+        method: 'GET',
+        headers: {
+            "Authorization": "Bearer {{ token }}"
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        const codeTypes = data.code_types;
+        if (codeTypes && codeTypes.length > 0) {
+            // Populate the code type select element
+            codeTypeSelect.innerHTML = '';
+            codeTypes.forEach(type => {
+                const option = document.createElement('option');
+                option.value = type;
+                option.textContent = type.toUpperCase();
+                codeTypeSelect.appendChild(option);
+            });
+            codeTypeSelect.disabled = false;
+        } else {
+            codeTypeSelect.innerHTML = '';
+            codeTypeSelect.disabled = true;
+            alert('No available code types.');
+        }
+    })
+    .catch(error => {
+        console.error('Error fetching code types:', error);
+        alert('Error fetching code types. Please try again later.');
+    });
+
+    document.getElementById('barcode-form').addEventListener('submit', function (e) {
+        e.preventDefault();
+        divError.style.display = 'none'; // Hide error message for new requests
+        divResponse.style.display = 'none'; // Hide previous responses
+
+        const textInput = document.getElementById('text');
+
+        if (textInput.value.trim() === '') {
+            alert('Please input text to generate a barcode.');
+            return;
+        }
+
+        if (!codeTypeSelect.value) {
+            alert('Please select a code type.');
+            return;
+        }
+
+        spinner.style.display = 'block';
+        codeTypeSelect.disabled = true; // Disable code type selection during processing
+
+        const formData = new FormData();
+        formData.append('text', textInput.value);
+        formData.append('code_type', codeTypeSelect.value);
+
+        fetch('{{ fast_api_path_full_path }}', {
+            method: 'POST',
+            headers: {
+                "Authorization": "Bearer {{ token }}"
+            },
+            body: formData
+        })
+        .then(response => {
+            spinner.style.display = 'none';
+            codeTypeSelect.disabled = false; // Re-enable code type selection
+
+            if (response.status === 200) {
+                return response.blob().then(blob => {
+                    // Extract the filename from the Content-Disposition header
+                    const contentDisposition = response.headers.get('content-disposition');
+                    let filename = 'barcode_image.png'; // Default filename
+
+                    if (contentDisposition && contentDisposition.includes('filename=')) {
+                        const filenameMatch = contentDisposition.match(/filename="?([^"]+)"?/);
+                        if (filenameMatch && filenameMatch[1]) {
+                            filename = filenameMatch[1];
+                        }
+                    }
+
+                    if (fileUrl) {
+                        URL.revokeObjectURL(fileUrl);
+                    }
+
+                    fileUrl = URL.createObjectURL(blob);
+
+                    divResponse.innerHTML = `
+                        <a href="${fileUrl}" download="${filename}" class="btn btn-primary">
+                            Download Barcode Image
+                        </a>
+                        <br><br>
+                        <img src="${fileUrl}" alt="Barcode Image" class="img-fluid mt-3" />
+                    `;
+                    divResponse.style.display = 'block';
+                });
+            } else {
+                return response.json().then(data => {
+                    errorMessage.textContent = data.detail || "An unknown error occurred.";
+                    divError.style.display = 'block';
+                });
+            }
+        })
+        .catch(error => {
+            errorMessage.textContent = "Please try again later.";
+            divError.style.display = 'block';
+            spinner.style.display = 'none';
+            codeTypeSelect.disabled = false; // Re-enable code type selection
+            console.error('Fetch error:', error);
+        });
+    });
+});
+</script>
+{% endblock %}

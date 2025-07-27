@@ -1,0 +1,139 @@
+# This is only for local development
+services:
+  app_docs_v1:
+    image: app_docs_v1
+    build:
+      context: "${PWD}/app_api/app_docs/cloud_run_container_app_docs/v1"
+      dockerfile: "${PWD}/app_api/app_docs/cloud_run_container_app_docs/v1/Dockerfile"
+    container_name: app_docs_v1
+    environment:
+        - ENV_MODE=${ENV_MODE:-local}
+        - CRYPT_SECRET_KEY_G_CLOUD_RUN=${CRYPT_SECRET_KEY_G_CLOUD_RUN}
+        - EXPECTED_TOKEN_CLOUD_RUN=expected
+    restart: unless-stopped
+    ports:
+      - "9001:8080"
+    networks:
+      - doodleops_net
+    working_dir: /app_docs_v1
+    volumes:
+      - "${PWD}/app_api/app_docs/cloud_run_container_app_docs/v1:/app_docs_v1"
+
+  app_epub_v1:
+    image: app_epub_v1
+    build:
+      context: "${PWD}/app_api/app_epub/cloud_run_container_app_epub/v1"
+      dockerfile: "${PWD}/app_api/app_epub/cloud_run_container_app_epub/v1/Dockerfile"
+    container_name: app_epub_v1
+    environment:
+      - ENV_MODE=${ENV_MODE:-local}
+      - CRYPT_SECRET_KEY_G_CLOUD_RUN=${CRYPT_SECRET_KEY_G_CLOUD_RUN}
+      - EXPECTED_TOKEN_CLOUD_RUN=expected
+    restart: unless-stopped
+    ports:
+      - "9002:8080"
+    networks:
+      - doodleops_net
+    working_dir: /app_epub_v1
+    volumes:
+      - "${PWD}/app_api/app_epub/cloud_run_container_app_epub/v1:/app_epub_v1"
+
+  app_html_v1:
+    image: app_html_v1
+    build:
+      context: "${PWD}/app_api/app_html/cloud_run_container_app_html/v1"
+      dockerfile: "${PWD}/app_api/app_html/cloud_run_container_app_html/v1/Dockerfile"
+    container_name: app_html_v1
+    platform: linux/amd64
+    environment:
+      - ENV_MODE=${ENV_MODE:-local}
+      - CRYPT_SECRET_KEY_G_CLOUD_RUN=${CRYPT_SECRET_KEY_G_CLOUD_RUN}
+      - EXPECTED_TOKEN_CLOUD_RUN=expected
+    restart: unless-stopped
+    ports:
+      - "9003:8080"
+    networks:
+      - doodleops_net
+    working_dir: /app_html_v1
+    volumes:
+      - "${PWD}/app_api/app_html/cloud_run_container_app_html/v1:/app_html_v1"
+
+  app_hugging_face_v1:
+    image: app_hugging_face_v1
+    build:
+      context: "${PWD}/app_api/app_hugging_face/cloud_run_container_app_hugging_face/v1"
+      dockerfile: "${PWD}/app_api/app_hugging_face/cloud_run_container_app_hugging_face/v1/Dockerfile"
+    container_name: app_hugging_face_v1
+    environment:
+      - ENV_MODE=${ENV_MODE:-local}
+      - CRYPT_SECRET_KEY_G_CLOUD_RUN=${CRYPT_SECRET_KEY_G_CLOUD_RUN}
+      - EXPECTED_TOKEN_CLOUD_RUN=expected
+    restart: unless-stopped
+    ports:
+      - "9004:8080"
+    networks:
+      - doodleops_net
+    working_dir: /app_hugging_face_v1
+    volumes:
+      - "${PWD}/app_api/app_hugging_face/cloud_run_container_app_hugging_face/v1:/app_hugging_face_v1"
+
+  app_images_v1:
+    image: app_images_v1
+    build:
+      context: "${PWD}/app_api/app_images/cloud_run_container_app_images/v1"
+      dockerfile: "${PWD}/app_api/app_images/cloud_run_container_app_images/v1/Dockerfile"
+    container_name: app_images_v1
+    environment:
+      - ENV_MODE=${ENV_MODE:-local}
+      - CRYPT_SECRET_KEY_G_CLOUD_RUN=${CRYPT_SECRET_KEY_G_CLOUD_RUN}
+      - EXPECTED_TOKEN_CLOUD_RUN=expected
+    restart: unless-stopped
+    ports:
+      - "9005:8080"
+    networks:
+      - doodleops_net
+    working_dir: /app_images_v1
+    volumes:
+      - "${PWD}/app_api/app_images/cloud_run_container_app_images/v1:/app_images_v1"
+
+  app_pdf_v1:
+    image: app_pdf_v1
+    build:
+      context: "${PWD}/app_api/app_pdf/cloud_run_container_app_pdf/v1"
+      dockerfile: "${PWD}/app_api/app_pdf/cloud_run_container_app_pdf/v1/Dockerfile"
+    container_name: app_pdf_v1
+    environment:
+      - ENV_MODE=${ENV_MODE:-local}
+      - CRYPT_SECRET_KEY_G_CLOUD_RUN=${CRYPT_SECRET_KEY_G_CLOUD_RUN}
+      - EXPECTED_TOKEN_CLOUD_RUN=expected
+    restart: unless-stopped
+    ports:
+      - "9006:8080"
+    networks:
+      - doodleops_net
+    working_dir: /app_pdf_v1
+    volumes:
+      - "${PWD}/app_api/app_pdf/cloud_run_container_app_pdf/v1:/app_pdf_v1"
+
+  app_ai_v1:
+    image: app_ai_v1
+    build:
+      context: "${PWD}/app_api/app_ai/cloud_run_container_app_ai/v1"
+      dockerfile: "${PWD}/app_api/app_ai/cloud_run_container_app_ai/v1/Dockerfile"
+    container_name: app_ai_v1
+    env_file: "${PWD}/deploy/local/app_api/app_ai_v1/.env"
+    restart: unless-stopped
+    # this port is not used because calls should come through pub/sub
+    ports:
+      - "9007:8080"
+    networks:
+      - doodleops_net
+    working_dir: /app_ai_v1
+    volumes:
+      - "${PWD}/app_api/app_ai/cloud_run_container_app_ai/v1:/app_ai_v1"
+      - "/Users/alex_g/projects/keys/dev/terraform-service-account-key.json:/terraform-service-account-key.json"
+      - "/Users/alex_g/projects/keys/prod/prod-terraform-service-account-key.json:/prod-terraform-service-account-key.json"
+
+networks:
+  doodleops_net:
+    external: true

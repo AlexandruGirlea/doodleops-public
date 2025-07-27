@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% load static %}
+{% load custom_tags %}
+
+{% block main %}
+<main>
+  <p class="text-center text-muted">
+📌 This section is not open-source — it's based on a purchased theme whose HTML markup remains proprietary and cannot be shared under open-source terms.
+  </p>
+    <div class="" style="padding-bottom: 0px;">
+        <div class="">
+            <h2 class="h2">
+                <a href="{% url 'services' api.api_app.url_path %}">
+                    {{ api.api_app.display_name }}</a>:
+                <span class="">
+                    {% if api.svg_icon_name %}
+                        <img class="" src="{% get_svg_path api.svg_icon_name %}" alt="Image Description">
+                    {% else %}
+                        <img class="" src="{% static 'logo.png' %}" alt="Image Description">
+                    {% endif %}
+                </span>
+                {{ api.display_name }}
+            </h2>
+
+            <p>{{ api.description }}</p>
+            {% if api.cost %}
+                <p>It Costs: <b>{{ api.cost }} Credits / Use</b></p>
+            {% elif api.cost == 0 %}
+                <p><b>It's Free!</b></p>
+            {% endif %}
+            {% if "WhatsApp" in api.display_name %}
+                <p class="" style="font-size: 1.2em;">You need to have an active account and your phone number verified to use this feature.</p>
+            {% elif not user.is_authenticated %}
+                <p class="">Please <a href="{% url 'login' %}">Login</a> to use the feature</p>
+            {% else %}
+                <p class="">Please click <a href="{% url 'contact' %}?api-feedback={{api.unique_id}}">Here</a> to provide feedback on this service</p>
+            {% endif %}
+        </div>
+
+        {% block html_form_logic %}
+        {% endblock %}
+    </div>
+
+  {% block scripts %}
+  {% endblock %}
+</main>
+{% endblock %}

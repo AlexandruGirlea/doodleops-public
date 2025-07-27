@@ -1,0 +1,198 @@
+{% extends "base_api_apps_view.html" %}
+{% load static %}
+
+{% block html_form_logic %}
+  <p class="text-center text-muted">
+    📌 This section is not open-source — it's based on a purchased theme whose HTML markup remains proprietary and cannot be shared under open-source terms.
+  </p>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const divResponse = document.getElementById('div-response');
+        const spinner = document.getElementById('spinner');
+        const divError = document.getElementById('div-error');
+        const errorMessage = document.getElementById('error-message');
+        let fileUrl = null;
+
+        // Define allowed combinations
+        const allowedCombinations = {
+            '.pdf': ['epub'],
+            '.epub': ['pdf', 'docx'],
+            '.docx': ['epub'],
+        };
+
+        const form = document.getElementById('convert-form');
+        const fileInput = document.getElementById('file');
+        const outputFormatSelect = document.getElementById('output_format');
+
+        /**
+         * Function to clear and reset the Output Format select options
+         */
+        function resetOutputFormats() {
+            // Clear all existing options
+            outputFormatSelect.innerHTML = '';
+
+            // Create and append the default disabled selected option
+            const defaultOption = document.createElement('option');
+            defaultOption.value = "";
+            defaultOption.textContent = "Please select an output format";
+            defaultOption.disabled = true;
+            defaultOption.selected = true;
+            outputFormatSelect.appendChild(defaultOption);
+
+            // Disable the select element
+            outputFormatSelect.disabled = true;
+        }
+
+        /**
+         * Function to populate the Output Format select options based on input file extension
+         * @param {string} extension - The file extension (e.g., '.pdf')
+         */
+        function populateOutputFormats(extension) {
+            resetOutputFormats();
+
+            const allowedOutputs = allowedCombinations[extension] || [];
+
+            if (allowedOutputs.length === 0) {
+                // No allowed output formats for the selected input file
+                const noOption = document.createElement('option');
+                noOption.textContent = "No available output formats";
+                noOption.disabled = true;
+                outputFormatSelect.appendChild(noOption);
+                outputFormatSelect.disabled = true;
+                return;
+            }
+
+            // Populate allowed output formats
+            allowedOutputs.forEach(format => {
+                const option = document.createElement('option');
+                option.value = format;
+                option.textContent = format.toUpperCase();
+                outputFormatSelect.appendChild(option);
+            });
+
+            // Enable the select element
+            outputFormatSelect.disabled = false;
+        }
+
+        fileInput.addEventListener('change', function () {
+            const files = fileInput.files;
+            if (files.length === 0) {
+                resetOutputFormats();
+                return;
+            }
+
+            const file = files[0];
+            const extensionMatch = file.name.match(/\.[0-9a-z]+$/i);
+            const extension = extensionMatch ? extensionMatch[0].toLowerCase() : '';
+
+            if (!allowedCombinations.hasOwnProperty(extension)) {
+                alert('Unsupported input file type.');
+                resetOutputFormats();
+                return;
+            }
+
+            populateOutputFormats(extension);
+        });
+
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            divError.style.display = 'none'; // Hide previous error messages
+            divResponse.style.display = 'none'; // Hide previous responses
+
+            const file = fileInput.files[0];
+            const outputFormat = outputFormatSelect.value;
+
+            // Client-side Validation
+            if (!file) {
+                alert('Please select an input file.');
+                return;
+            }
+
+            if (!outputFormat) {
+                alert('Please select an output format.');
+                return;
+            }
+
+            const inputExtension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+
+            // Define allowed input extensions based on FastAPI validation
+            const allowedInputExtensions = ['.epub', '.pdf', '.docx'];
+
+            if (!allowedInputExtensions.includes(inputExtension)) {
+                alert('Unsupported input file type.');
+                return;
+            }
+
+            const serverAllowedCombinations = {
+                '.epub': ['pdf', 'docx'],
+                '.pdf': ['epub'],
+                '.docx': ['epub'],
+            };
+
+            if (!serverAllowedCombinations[inputExtension].includes(outputFormat)) {
+                alert(`Unsupported output format "${outputFormat}" for the selected file type.`);
+                return;
+            }
+
+            spinner.style.display = 'block';
+
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('output_format', outputFormat);
+
+            fetch('{{ fast_api_path_full_path }}', {
+                method: 'POST',
+                headers: {
+                    "Authorization": "Bearer {{ token }}"
+                },
+                body: formData
+            })
+            .then(async response => {
+                spinner.style.display = 'none';
+                if (response.ok) {
+                        const blob = await response.blob();
+
+                        // Extract the filename from the Content-Disposition header
+                        const contentDisposition = response.headers.get('content-disposition');
+                        let filename = `converted_file.${outputFormat}`;
+
+                        if (contentDisposition && contentDisposition.includes('filename=')) {
+                            const filenameMatch = contentDisposition.match(/filename="?([^"]+)"?/);
+                            if (filenameMatch && filenameMatch[1]) {
+                                filename = filenameMatch[1];
+                            }
+                        }
+
+                        if (fileUrl) {
+                            URL.revokeObjectURL(fileUrl);
+                        }
+
+                        fileUrl = URL.createObjectURL(blob);
+                        divResponse.innerHTML = `
+                            <a href="${fileUrl}" download="${filename}" class="btn btn-primary">
+                                Download Converted File
+                            </a>
+                        `;
+                        divResponse.style.display = 'block';
+                    } else {
+                    const data = await response.json();
+                    errorMessage.textContent = data.detail || "An unknown error occurred.";
+                    divError.style.display = 'block';
+                }
+            })
+            .catch(error => {
+                spinner.style.display = 'none';
+                errorMessage.textContent = "Please try again later.";
+                divError.style.display = 'block';
+                console.error('Fetch error:', error);
+            });
+        });
+
+        // Initialize the Output Format select as disabled on page load
+        resetOutputFormats();
+    });
+</script>
+{% endblock %}

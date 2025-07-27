@@ -1,0 +1,114 @@
+{% extends "base_api_apps_view.html" %}
+{% load static %}
+
+{% block html_form_logic %}
+  <p class="text-center text-muted">
+    📌 This section is not open-source — it's based on a purchased theme whose HTML markup remains proprietary and cannot be shared under open-source terms.
+  </p>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let divResponse = document.getElementById('div-response');
+    divResponse.style.display = 'none';
+
+    let spinner = document.getElementById('spinner');
+    spinner.style.display = 'none';
+
+    let divError = document.getElementById('div-error');
+    divError.style.display = 'none';
+
+    let errorMessage;
+    let fileUrl;
+
+    document.getElementById('pdf-form').addEventListener('submit', function (e) {
+        e.preventDefault();
+        divError.style.display = 'none'; // Hide error message for new requests
+
+        const imgFilesInput = document.getElementById('img_files');
+        let useUploadOrder = document.querySelector('input[name="useUploadOrder"]:checked').value === 'true';
+
+        let totalSize = 0;
+
+        const formData = new FormData();
+
+        if (imgFilesInput.files.length === 0) {
+            alert('Please select image files to process.');
+            return;
+        } else {
+            for (let i = 0; i < imgFilesInput.files.length; i++) {
+                formData.append('files', imgFilesInput.files[i]);
+                totalSize += imgFilesInput.files[i].size;
+            }
+        }
+
+        if (imgFilesInput.files.length > {{ api.other_info.max_no_of_files }}) {
+            alert('Please select at most {{ api.other_info.max_no_of_files }} image files to process.');
+            return;
+        }
+
+        if (totalSize > {{ api.other_info.max_files_size_mb }} * 1024 * 1024) {
+            alert('The total size of the uploaded files must not exceed {{ api.other_info.file_size_mb }} MB.');
+            return;
+        }
+
+        spinner.style.display = 'block';
+
+        const url = '{{ fast_api_path_full_path }}' + '?use_upload_order=' + encodeURIComponent(useUploadOrder);
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                "Authorization": "Bearer {{ token }}"
+            },
+            body: formData
+        })
+        .then(response => {
+            if (response.status === 200) {
+                return response.blob().then(blob => {
+                    // Extract the filename from the Content-Disposition header
+                    const contentDisposition = response.headers.get('content-disposition');
+                    let filename = 'merged.pdf'; // Default filename
+
+                    if (contentDisposition && contentDisposition.includes('filename=')) {
+                        const filenameMatch = contentDisposition.match(/filename="?([^"]+)"?/);
+                        if (filenameMatch && filenameMatch[1]) {
+                            filename = filenameMatch[1];
+                        }
+                    }
+
+                    if (fileUrl) {
+                        URL.revokeObjectURL(fileUrl);
+                    }
+
+                    fileUrl = URL.createObjectURL(blob);
+
+                    divResponse.innerHTML = `
+                        <a href="${fileUrl}" download="${filename}" class="btn btn-primary">
+                            Download PDF
+                        </a>
+                    `;
+                    spinner.style.display = 'none';
+                    divResponse.style.display = 'block';
+                });
+            } else {
+                return response.json().then(data => {
+                    errorMessage = document.getElementById('error-message');
+                    errorMessage.textContent = data.detail || "An unknown error occurred.";
+                    spinner.style.display = 'none';
+                    divError.style.display = 'block';
+                });
+            }
+        })
+        .catch(error => {
+            errorMessage = document.getElementById('error-message');
+            errorMessage.textContent = "Please try again later.";
+            spinner.style.display = 'none';
+            divError.style.display = 'block';
+            console.error('Fetch error:', error);
+        });
+    });
+});
+</script>
+{% endblock %}

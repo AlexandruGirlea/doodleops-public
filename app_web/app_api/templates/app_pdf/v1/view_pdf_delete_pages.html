@@ -1,0 +1,121 @@
+{% extends "base_api_apps_view.html" %}
+{% load static %}
+
+{% block html_form_logic %}
+  <p class="text-center text-muted">
+    📌 This section is not open-source — it's based on a purchased theme whose HTML markup remains proprietary and cannot be shared under open-source terms.
+  </p>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let divResponse;
+let spinner;
+let divError;
+let errorMessage;
+let fileUrl;
+
+document.addEventListener('DOMContentLoaded', () => {
+    divResponse = document.getElementById('div-response');
+    divResponse.style.display = 'none';
+
+    spinner = document.getElementById('spinner');
+    spinner.style.display = 'none';
+
+    divError = document.getElementById('div-error');
+    divError.style.display = 'none';
+});
+
+// Function to validate the pages_to_remove input
+function validatePagesToRemove(pagesToRemove) {
+    const regex = /^\s*\d+(\s*,\s*\d+)*\s*$/;
+    return regex.test(pagesToRemove);
+}
+
+document.getElementById('pdf-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    divError.style.display = 'none'; // Hide error message for new requests
+
+    const fileInput = document.getElementById('file');
+    const pagesToRemove = document.getElementById('pages_to_remove').value;
+
+    let totalSize = 0;
+
+    if (fileInput.files.length === 0) {
+        alert('Please select a PDF file to process.');
+        return;
+    }
+
+    if (!validatePagesToRemove(pagesToRemove)) {
+        alert('Please enter valid page numbers to remove, e.g., "1,3,5".');
+        return;
+    }
+
+    totalSize += fileInput.files[0].size;
+
+    if (totalSize > {{ api.other_info.file_size_mb }} * 1024 * 1024) {
+        alert('The total size of the uploaded files must not exceed {{ api.other_info.file_size_mb }} MB.');
+        return;
+    }
+
+    spinner.style.display = 'block';
+
+    const formData = new FormData();
+    formData.append('file', fileInput.files[0]);
+
+    fetch('{{ fast_api_path_full_path }}?pages_to_remove=' + pagesToRemove, {
+        method: 'POST',
+        headers: {
+            "Authorization": "Bearer {{ token }}"
+        },
+        body: formData
+    })
+    .then(response => {
+        if (response.status === 200) {
+            return response.blob().then(blob => {
+                // Extract the filename from the Content-Disposition header
+                const contentDisposition = response.headers.get('content-disposition');
+                let filename = 'downloaded_file'; // Default filename if extraction fails
+
+                if (contentDisposition && contentDisposition.includes('filename=')) {
+                    const filenameMatch = contentDisposition.match(/filename="?([^"]+)"?/);
+                    if (filenameMatch && filenameMatch[1]) {
+                        filename = filenameMatch[1];
+                    }
+                }
+
+                if (fileUrl) {
+                    URL.revokeObjectURL(fileUrl);
+                }
+
+                fileUrl = URL.createObjectURL(blob);
+
+                divResponse.innerHTML = `
+                    <a href="${fileUrl}" download="${filename}" class="btn btn-primary">
+                        Download PDF
+                    </a>
+                `;
+
+
+                spinner.style.display = 'none';
+                divResponse.style.display = 'block';
+            });
+        } else {
+            return response.json().then(data => {
+                errorMessage = document.getElementById('error-message');
+                errorMessage.textContent = data.detail || "An unknown error occurred.";
+                spinner.style.display = 'none';
+                divError.style.display = 'block';
+            });
+        }
+    })
+    .catch(error => {
+        errorMessage = document.getElementById('error-message');
+        errorMessage.textContent = "Please try again later.";
+        spinner.style.display = 'none';
+        divError.style.display = 'block';
+        console.error('Fetch error:', error);
+    });
+});
+</script>
+{% endblock %}

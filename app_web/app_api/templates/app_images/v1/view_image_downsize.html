@@ -1,0 +1,193 @@
+{% extends "base_api_apps_view.html" %}
+{% load static %}
+
+{% block html_form_logic %}
+  <p class="text-center text-muted">
+    📌 This section is not open-source — it's based on a purchased theme whose HTML markup remains proprietary and cannot be shared under open-source terms.
+  </p>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    let divResponse = document.getElementById('div-response');
+    let spinner = document.getElementById('spinner');
+    let divError = document.getElementById('div-error');
+    let errorMessage = document.getElementById('error-message');
+    let fileUrl;
+
+    let maxWidthPxInput = document.getElementById('max_width_px');
+    let maxHeightPxInput = document.getElementById('max_height_px');
+    let widthValueSpan = document.getElementById('width-value');
+    let heightValueSpan = document.getElementById('height-value');
+    let maxMbSizeInput = document.getElementById('max_mb_size');
+
+    let resizeDimensionsRadio = document.getElementById('resize_dimensions');
+    let resizeFileSizeRadio = document.getElementById('resize_file_size');
+    let dimensionsInputs = document.getElementById('dimensions-inputs');
+    let fileSizeInputDiv = document.getElementById('file-size-input');
+
+    // Update displayed values on page load
+    widthValueSpan.textContent = maxWidthPxInput.value;
+    heightValueSpan.textContent = maxHeightPxInput.value;
+
+    // Event listeners for sliders
+    maxWidthPxInput.addEventListener('input', function () {
+        widthValueSpan.textContent = maxWidthPxInput.value;
+    });
+
+    maxHeightPxInput.addEventListener('input', function () {
+        heightValueSpan.textContent = maxHeightPxInput.value;
+    });
+
+    // Function to update input visibility based on selected method
+    function updateInputVisibility() {
+        if (resizeDimensionsRadio.checked) {
+            dimensionsInputs.style.display = 'block';
+            fileSizeInputDiv.style.display = 'none';
+            maxMbSizeInput.disabled = true;
+            maxWidthPxInput.disabled = false;
+            maxHeightPxInput.disabled = false;
+        } else if (resizeFileSizeRadio.checked) {
+            dimensionsInputs.style.display = 'none';
+            fileSizeInputDiv.style.display = 'block';
+            maxMbSizeInput.disabled = false;
+            maxWidthPxInput.disabled = true;
+            maxHeightPxInput.disabled = true;
+        }
+    }
+
+    // Initial call to set the correct visibility
+    updateInputVisibility();
+
+    // Event listeners for radio buttons
+    resizeDimensionsRadio.addEventListener('change', updateInputVisibility);
+    resizeFileSizeRadio.addEventListener('change', updateInputVisibility);
+
+    document.getElementById('image-form').addEventListener('submit', function (e) {
+        e.preventDefault();
+        divError.style.display = 'none'; // Hide error message for new requests
+
+        const fileInput = document.getElementById('file');
+        const outputFormatSelect = document.getElementById('output_format');
+
+        if (fileInput.files.length === 0) {
+            alert('Please select an image file to process.');
+            return;
+        }
+
+        // Get values from inputs
+        const maxWidthPx = maxWidthPxInput.value;
+        const maxHeightPx = maxHeightPxInput.value;
+        const maxMbSize = maxMbSizeInput.value;
+        const outputFormat = outputFormatSelect.value;
+
+        // Determine which method is selected
+        const isDimensionsMethod = resizeDimensionsRadio.checked;
+        const isFileSizeMethod = resizeFileSizeRadio.checked;
+
+        // Validation: Ensure that the selected method has its inputs filled
+        if (isDimensionsMethod) {
+            if (!maxWidthPx || !maxHeightPx) {
+                alert('Please set both Max Width and Max Height.');
+                return;
+            }
+        } else if (isFileSizeMethod) {
+            if (!maxMbSize) {
+                alert('Please set the Max File Size.');
+                return;
+            }
+        } else {
+            alert('Please select a resize method.');
+            return;
+        }
+
+        // Client-side file size validation
+        if (fileInput.files.length > 0) {
+            const file = fileInput.files[0];
+
+            if (file.size > {{ api.other_info.file_size_mb }} * 1024 * 1024) {
+                alert('The uploaded file must not exceed {{ api.other_info.file_size_mb }} MB.');
+                return;
+            }
+
+            // Check file type
+            const allowedFileTypes = ['image/png', 'image/jpeg'];
+            if (!allowedFileTypes.includes(file.type)) {
+                alert('Only JPEG and PNG files are allowed.');
+                return;
+            }
+        }
+
+        spinner.style.display = 'block';
+
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+
+        // Construct URL with query parameters
+        let url = new URL('{{ fast_api_path_full_path }}');
+        if (isDimensionsMethod) {
+            url.searchParams.append('max_width_px', maxWidthPx);
+            url.searchParams.append('max_height_px', maxHeightPx);
+        } else if (isFileSizeMethod) {
+            url.searchParams.append('max_mb_size', maxMbSize);
+        }
+        if (outputFormat) {
+            url.searchParams.append('output_format', outputFormat);
+        }
+
+        fetch(url.toString(), {
+            method: 'POST',
+            headers: {
+                "Authorization": "Bearer {{ token }}"
+            },
+            body: formData
+        })
+        .then(response => {
+            if (response.status === 200) {
+                return response.blob().then(blob => {
+                    // Extract the filename from the Content-Disposition header
+                    const contentDisposition = response.headers.get('content-disposition');
+                    let filename = 'downsized_image.' + outputFormat; // Default filename
+
+                    if (contentDisposition && contentDisposition.includes('filename=')) {
+                        const filenameMatch = contentDisposition.match(/filename="?([^"]+)"?/);
+                        if (filenameMatch && filenameMatch[1]) {
+                            filename = filenameMatch[1];
+                        }
+                    }
+
+                    if (fileUrl) {
+                        URL.revokeObjectURL(fileUrl);
+                    }
+
+                    fileUrl = URL.createObjectURL(blob);
+
+                    divResponse.innerHTML = `
+                        <img src="${fileUrl}" alt="Downsized Image" class="img-fluid">
+                        <br><br>
+                        <a href="${fileUrl}" download="${filename}" class="btn btn-primary">
+                            Download Image
+                        </a>
+                    `;
+                    spinner.style.display = 'none';
+                    divResponse.style.display = 'block';
+                });
+            } else {
+                return response.json().then(data => {
+                    errorMessage.textContent = data.detail || "An unknown error occurred.";
+                    spinner.style.display = 'none';
+                    divError.style.display = 'block';
+                });
+            }
+        })
+        .catch(error => {
+            errorMessage.textContent = "Please try again later.";
+            spinner.style.display = 'none';
+            divError.style.display = 'block';
+            console.error('Fetch error:', error);
+        });
+    });
+});
+</script>
+{% endblock %}

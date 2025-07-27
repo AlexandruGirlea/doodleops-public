@@ -1,0 +1,46 @@
+{% extends 'base_email.html' %}
+
+{% block title %}We're Sorry to See You Go{% endblock %}
+
+{% block header %}
+    {% if inline_logo %}
+        <img src="cid:logo.png" alt="Company Logo" width="100" style="display:block; margin:auto;">
+    {% else %}
+        <h2 style="text-align:center; color:#2C62FF; margin:0; font-family: Arial, sans-serif;">DoodleOps</h2>
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+    <div class="content" style="max-width:600px; margin:0 auto; background-color:#ffffff; padding:30px; border-radius:8px; box-shadow:0 0 10px rgba(0,0,0,0.1); font-family: Arial, sans-serif; color:#333333;">
+        <h3 style="font-size:24px; color:#333333; margin-top:0;">We're Sorry to See You Go, {{ email }}.</h3>
+
+        <p style="font-size:16px; line-height:1.6;">
+            We're sorry to hear that you've decided to delete your DoodleOps account. Your experience and satisfaction are very important to us.
+        </p>
+
+        <p style="font-size:16px; line-height:1.6;">
+            If you have a moment, we'd appreciate your feedback to help us improve our services. Please <b>reply</b> to this email with any comments or suggestions you may have.
+        </p>
+
+        <p style="font-size:16px; line-height:1.6;">
+            Thank you for being a part of our community. We hope to see you again in the future!
+        </p>
+
+        <p style="font-size:16px; line-height:1.6;">
+            Best regards,<br>
+            Alex G.<br>
+            CEO, DoodleOps
+        </p>
+    </div>
+{% endblock %}
+
+{% block footer %}
+    <div class="footer" style="text-align:center; margin-top:30px; font-size:12px; color:#888888; font-family: Arial, sans-serif;">
+        <p>
+            © {{ current_year }} DoodleOps.com. All rights reserved.<br>
+            <a href="{{ domain_path }}/terms/" style="color:#888888; text-decoration:none;">Terms &amp; Conditions</a> |
+            <a href="{{ domain_path }}/privacy/" style="color:#888888; text-decoration:none;">Privacy Policy</a> |
+            <a href="{{ domain_path }}/contact" style="color:#888888; text-decoration:none;">Contact Us</a>
+        </p>
+    </div>
+{% endblock %}

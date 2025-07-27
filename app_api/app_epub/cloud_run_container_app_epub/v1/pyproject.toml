@@ -1,0 +1,40 @@
+[tool.poetry]
+name = "app-epub"
+version = "0.4.0"
+description = ""
+authors = ["Alex Girlea"]
+readme = "ReadMe.md"
+
+[tool.poetry.dependencies]
+python = "~3.10"
+uvicorn = "~0.30.0"
+fastapi = "~0.99.0"
+python-multipart = "~0.0.9"
+cryptography = "~42.0.4"
+google-cloud-secret-manager = "~2.20.2"
+
+#logging
+rich = "~13.9.4"
+
+# this if for opentelemetry
+opentelemetry-api = "~1.24.0"
+opentelemetry-exporter-gcp-monitoring = "~1.6.0a0"
+opentelemetry-exporter-gcp-trace = "~1.6.0"
+opentelemetry-exporter-otlp = "~1.24.0"
+opentelemetry-exporter-otlp-proto-common = "~1.24.0"
+opentelemetry-exporter-otlp-proto-grpc = "~1.24.0"
+opentelemetry-exporter-otlp-proto-http = "~1.24.0"
+opentelemetry-instrumentation = "~0.45b0"
+opentelemetry-instrumentation-asgi = "~0.45b0"
+opentelemetry-instrumentation-fastapi = "~0.45b0"
+opentelemetry-proto = "~1.24.0"
+opentelemetry-sdk = "~1.24.0"
+opentelemetry-semantic-conventions = "~0.45b0"
+opentelemetry-util-http = "~0.45b0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "~8.2.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
