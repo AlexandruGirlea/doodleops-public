@@ -20,23 +20,23 @@ If you would like to connect, you can do so via [LinkedIn](https://www.linkedin.
 ---
 
 ## 💼 Licensing at a glance
-
-| Audience             | Rights                                          | Cost                                                                                   |
-|----------------------|-------------------------------------------------|----------------------------------------------------------------------------------------|
-| Learners & hobbyists | Non‑production use (≤ 25 users)                 | **Free**                                                                               |
-| Recognised NGOs      | Full production use (logo attribution required) | **Free**                                                                               |
-| Startups             | Production use                                  | **Startups** can trade **3% future gross revenue** (up to €50.000) for an OEM licence  |
-| Businesses           | Production use                                  | One‑time licence: Training €3.000 · Growth €12.000 · Enterprise €25.000 · OEM €50.000  |
-
 *Full terms:* see [**LICENSE**](LICENSE.md) (BSL 1.1) and [**COMMERCIAL_LICENSE.md**](COMMERCIAL_LICENSE.md).
+
+| Audience             | Rights                                          | Cost                                                             |
+|----------------------|-------------------------------------------------|------------------------------------------------------------------|
+| Learners & hobbyists | Non‑production use (≤ 25 users)                 | **Free**                                                         |
+| Recognised NGOs      | Full production use (logo attribution required) | **Free**                                                         |
+| Start-ups            | Production use                                  | Revenue-share **or** fixed OEM plan — see Commercial License     |
+| Businesses           | Production use                                  | One-time licence tiers (Training → OEM) — see Commercial License |
+
 
 ---
 
 ## 🤝 Community & support
 
-* Private **Slack** for licensees and NGOs (1 named contact for Training/Growth, 3 for Enterprise, 5 for OEM; **max.5 support tickets per month**; response 2‑3 business days).  
+* Private **Slack** for licensees and NGOs (1 named contact for Training/Growth, 3 for Enterprise, 5 for OEM; **max 5 support tickets per month**; response 2‑3 business days).  
 * Feature requests & bug reports: open a GitHub issue **or** email [alex@doodleops.com](mailto:alex@doodleops.com).  
-* If this repo helps you, please **star ★** it!
+* If this repo helps you in your learning journey, please consider **starring** it on GitHub to show your support!
 
 ---
 
@@ -46,41 +46,28 @@ If you would like to connect, you can do so via [LinkedIn](https://www.linkedin.
 
 ```mermaid
 flowchart LR
-    subgraph Internet
-        A[Internet<br/>Client]
-    end
-
-    A -->|HTTPS| B[Cloudflare]
-    B --> C[GCP<br/>Load&nbsp;Balancer]
-
-    subgraph DMZ["Public&nbsp;Zone"]
-        direction LR
-        D[Web&nbsp;Service]:::public
-        E[API&nbsp;Service]:::public
-        F[GCP&nbsp;CDN]:::public
-        D --> E
-        D --> F
-    end
-
-    C --> D
-    C --> E
-
-    subgraph VPC["Private&nbsp;VPC"]
-        direction TB
-        G[AI&nbsp;Service]
-        H[PDF&nbsp;Service]
-        I[Excel&nbsp;Service]
-        J[Image&nbsp;Service]
-        K[ePub&nbsp;Service]
-    end
-
-    E --> G
-    E --> H
-    E --> I
-    E --> J
-    E --> K
-
-    classDef public fill:#dfe7fd,stroke:#3b82f6,stroke-width:2px;
+ subgraph Internet["Internet"]
+        A["Internet<br>Client"]
+  end
+ subgraph DMZ["Private&nbsp;Zone"]
+    direction LR
+        D["Web&nbsp;Service"]
+        E["API&nbsp;Service"]
+        F["GCP&nbsp;CDN"]
+  end
+ subgraph VPC["Private&nbsp;VPC"]
+    direction TB
+        G["AI&nbsp;Service"]
+        H["PDF&nbsp;Service"]
+        I["Excel&nbsp;Service"]
+        J["Image&nbsp;Service"]
+        K["ePub&nbsp;Service"]
+  end
+    A -- HTTPS --> B["Cloudflare"]
+    B --> C["GCP<br>Load&nbsp;Balancer"]
+    D --> E & F
+    C --> D & E
+    E --> G & H & I & J & K
 ```
 ***How Users Connect to DoodleOps***
 ```mermaid
@@ -150,9 +137,6 @@ flowchart TB
     C1 --> C2
 
     %% Styles
-    classDef tierBase fill:#fef9c3,stroke:#f59e0b,stroke-width:2px;
-    classDef tierPro  fill:#fee2e2,stroke:#ef4444,stroke-width:2px;
-    classDef tierEnt  fill:#e0f2fe,stroke:#0284c7,stroke-width:2px;
     classDef note     fill:#ffffff,stroke-dasharray:3 3,color:#6b7280,font-style:italic;
     class Bnote note
 ```
