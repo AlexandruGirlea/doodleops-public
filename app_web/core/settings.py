@@ -141,13 +141,16 @@ DEFAULT_USER_API_DAILY_CALL_LIMIT = 200
 # ------------ Firebase and oAuth2
 TOKEN_COOKIE_NAME = "doodlepops-api-token"
 
-fb_admin.initialize_app(
-    fb_admin.credentials.Certificate(
-        json.loads(get_env_variable("FIREBASE_KEY_JSON").replace("'", '"'))
-    )
-)
+FIREBASE_KEY_JSON = json.loads(
+    get_env_variable("FIREBASE_KEY_JSON").replace("'", '"'))
 
-FIREBASE_CONFIG = json.loads(get_env_variable("FIREBASE_CONFIG_JSON").replace("'", '"'))
+if FIREBASE_KEY_JSON:
+    fb_admin.initialize_app(fb_admin.credentials.Certificate(FIREBASE_KEY_JSON))
+
+FIREBASE_CONFIG = json.loads(
+    get_env_variable("FIREBASE_CONFIG_JSON").replace("'", '"'))
+
+FIREBASE_CONFIG = FIREBASE_CONFIG if FIREBASE_CONFIG else {"apiKey": ""}
 
 GCP_JWT_AUTH_URL = (
     "https://www.googleapis.com/identitytoolkit/v3/relyingparty/"
@@ -210,12 +213,10 @@ REDIS_DB_DEFAULT = get_env_variable("REDIS_DB_DEFAULT")
 
 # ------------ Google SSO
 GOOGLE_PROJECT_ID = get_env_variable("GOOGLE_PROJECT_ID")
-if os.getenv("GOOGLE_SERVICE_ACCOUNT_KEY_JSON"):
-    GOOGLE_SERVICE_ACCOUNT_KEY_JSON = json.loads(
-        get_env_variable(
-            "GOOGLE_SERVICE_ACCOUNT_KEY_JSON"
-        ).replace("'", '"')
-    )
+GOOGLE_SERVICE_ACCOUNT_KEY_JSON =  json.loads(
+        get_env_variable("GOOGLE_SERVICE_ACCOUNT_KEY_JSON").replace("'", '"'))
+
+if GOOGLE_SERVICE_ACCOUNT_KEY_JSON:
     GOOGLE_SERVICE_ACCOUNT_KEY_JSON["private_key"] = (
         GOOGLE_SERVICE_ACCOUNT_KEY_JSON["private_key"].replace("\\n", "\n")
     )

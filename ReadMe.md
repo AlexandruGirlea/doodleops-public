@@ -189,4 +189,45 @@ flowchart TB
 * **Contributions welcome!** By submitting code you agree to the DoodleOps CLA
   – see [CONTRIBUTING.md](CONTRIBUTING.md) for the legal details.
 
+## 🏠 How to run the project locally
+1. **Clone the repository:**
+```bash
+git clone git@github.com:AlexandruGirlea/doodleops-public.git
+cd doodleops-public
+```
+
+2. **Install dependencies:**
+
+Make sure you have `Make, Docker, Docker Compose and Python` installed.
+
+3. **Setup the environment secrets**
+```bash
+cp deploy/local/app_web/demo.env deploy/local/app_web/.env
+cp deploy/local/app_api/demo.env deploy/local/app_api/.env
+cp deploy/local/app_api/app_ai_v1/demo.env deploy/local/app_api/app_ai_v1/.env
+```
+
+
+4. **Build/Start your containers and run the servers**
+```bash
+# for example
+make build cont=api
+make up cont=api
+make run cont=api
+
+make build cont=web
+make up cont=web
+make run cont=web
+
+make build cont=app_pdf_v1
+make up cont=app_pdf_v1
+make run cont=app_pdf_v1
+```
+
+For more helpful make commands, run `make help`.
+
+OBS: to fully make the project run locally you need to setup SSO through Firebbase,
+setup Stripe and other referenced services in the `.env` files.
+
+
 © 2025 Alexandru Girlea.

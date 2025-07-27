@@ -69,9 +69,6 @@ app.include_router(v1_view_docs_router)
 # App Epub Routers
 app.include_router(v1_view_epub_router)
 
-# App Html Routers
-app.include_router(v1_view_html_router)
-
 # App Images Routers
 app.include_router(v1_view_images_router)
 

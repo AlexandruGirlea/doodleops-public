@@ -25,14 +25,6 @@ app_epub_views = {
 	"fastapi_views": ["view_epub_convert",]
 }
 
-app_html_views = {
-	"prefix": "app_html",
-	"fastapi_views": [
-		"view_html_collect_performance_metrics_for_url",
-		"view_html_convert_url_to_pdf",
-	]
-}
-
 app_images_views = {
 	"prefix": "app_images",
 	"fastapi_views": [
@@ -92,7 +84,7 @@ app_ai_views = {
 api_apps_view_routes = dict()
 
 for app_views in [
-	app_docs_views, app_epub_views, app_html_views, app_images_views,
+	app_docs_views, app_epub_views, app_images_views,
 	app_pdf_views, app_ai_views
 ]:
 	for view in app_views["fastapi_views"]:
@@ -128,10 +120,6 @@ v1_view_docs_router = app_docs_routes["fastapi_views"].v1_view_docs_router
 app_epub_routes = api_apps_view_routes["app_epub"]
 v1_view_epub_router = app_epub_routes["fastapi_views"].v1_view_epub_router
 
-# App Html Routers
-app_html_routes = api_apps_view_routes["app_html"]
-v1_view_html_router = app_html_routes["fastapi_views"].v1_view_html_router
-
 # App Images Routers
 app_images_routes = api_apps_view_routes["app_images"]
 v1_view_images_router = app_images_routes["fastapi_views"].v1_view_images_router
@@ -155,9 +143,6 @@ __all__ = [
 
 	# App Epub Routers
 	"v1_view_epub_router",
-
-	# App Html Routers
-	"v1_view_html_router",
 
 	# App Images Routers
 	"v1_view_images_router",
