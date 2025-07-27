@@ -38,45 +38,6 @@ services:
     volumes:
       - "${PWD}/app_api/app_epub/cloud_run_container_app_epub/v1:/app_epub_v1"
 
-  app_html_v1:
-    image: app_html_v1
-    build:
-      context: "${PWD}/app_api/app_html/cloud_run_container_app_html/v1"
-      dockerfile: "${PWD}/app_api/app_html/cloud_run_container_app_html/v1/Dockerfile"
-    container_name: app_html_v1
-    platform: linux/amd64
-    environment:
-      - ENV_MODE=${ENV_MODE:-local}
-      - CRYPT_SECRET_KEY_G_CLOUD_RUN=${CRYPT_SECRET_KEY_G_CLOUD_RUN}
-      - EXPECTED_TOKEN_CLOUD_RUN=expected
-    restart: unless-stopped
-    ports:
-      - "9003:8080"
-    networks:
-      - doodleops_net
-    working_dir: /app_html_v1
-    volumes:
-      - "${PWD}/app_api/app_html/cloud_run_container_app_html/v1:/app_html_v1"
-
-  app_hugging_face_v1:
-    image: app_hugging_face_v1
-    build:
-      context: "${PWD}/app_api/app_hugging_face/cloud_run_container_app_hugging_face/v1"
-      dockerfile: "${PWD}/app_api/app_hugging_face/cloud_run_container_app_hugging_face/v1/Dockerfile"
-    container_name: app_hugging_face_v1
-    environment:
-      - ENV_MODE=${ENV_MODE:-local}
-      - CRYPT_SECRET_KEY_G_CLOUD_RUN=${CRYPT_SECRET_KEY_G_CLOUD_RUN}
-      - EXPECTED_TOKEN_CLOUD_RUN=expected
-    restart: unless-stopped
-    ports:
-      - "9004:8080"
-    networks:
-      - doodleops_net
-    working_dir: /app_hugging_face_v1
-    volumes:
-      - "${PWD}/app_api/app_hugging_face/cloud_run_container_app_hugging_face/v1:/app_hugging_face_v1"
-
   app_images_v1:
     image: app_images_v1
     build:
